@@ -146,7 +146,7 @@ function getInput() {
     const ref = core.getInput('ref', { required: true });
     // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
     let ignoreOwnCheckSuite = parseBoolean_1.parseBoolean(core.getInput('ignoreOwnCheckSuite', { required: true }));
-    if (ignoreOwnCheckSuite && (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` || ref !== github_1.context.sha)) {
+    if (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` || ref !== github_1.context.sha) {
         ignoreOwnCheckSuite = false;
     }
     // Default the timeout to null
@@ -11412,7 +11412,8 @@ function checkTheCheckSuites(options) {
             }
             // Log check suites for debugging purposes
             core.debug(JSON.stringify(checkSuites, null, 2));
-            // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further, for now skip one in_progress check suite
+            // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further,
+            //  for now skip one in_progress check suite status and one null check suite conclusion
             const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite);
             if (lowestCheckSuiteStatus === CheckSuiteStatus.completed) {
                 const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite);
@@ -11488,7 +11489,6 @@ function getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite) {
     return checkSuites
         .map(checkSuite => CheckSuiteConclusion[checkSuite.conclusion])
         .reduce((previous, current, currentIndex) => {
-        core.debug(`getLowestCheckSuiteConclusion current: ${current}`);
         if (skipOneUndefined && current === undefined) {
             skipOneUndefined = false;
             return previous;

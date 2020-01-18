@@ -169,7 +169,8 @@ async function checkTheCheckSuites(
     // Log check suites for debugging purposes
     core.debug(JSON.stringify(checkSuites, null, 2))
 
-    // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further, for now skip one in_progress check suite
+    // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further,
+    //  for now skip one in_progress check suite status and one null check suite conclusion
 
     const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite)
     if (lowestCheckSuiteStatus === CheckSuiteStatus.completed) {
@@ -256,7 +257,6 @@ function getLowestCheckSuiteConclusion(
   return checkSuites
     .map(checkSuite => CheckSuiteConclusion[checkSuite.conclusion as keyof typeof CheckSuiteConclusion])
     .reduce((previous, current, currentIndex) => {
-      core.debug(`getLowestCheckSuiteConclusion current: ${current}`)
       if (skipOneUndefined && current === undefined) {
         skipOneUndefined = false
         return previous

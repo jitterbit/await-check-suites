@@ -42,7 +42,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Checkout
+      - name: Checkout race_condition_test branch
         uses: actions/checkout@v2
         with:
           ref: race_condition_test

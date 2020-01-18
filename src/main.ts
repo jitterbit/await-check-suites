@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import {GitHub} from '@actions/github'
 import {getInput} from './getInput'
-import {waitForCheckSuites} from './wait-for-check-suites'
+import {CheckSuiteConclusion, waitForCheckSuites} from './wait-for-check-suites'
 
 async function run(): Promise<void> {
   try {
@@ -18,7 +18,7 @@ async function run(): Promise<void> {
       appSlugFilter
     } = getInput()
 
-    const success = await waitForCheckSuites({
+    const conclusion = await waitForCheckSuites({
       client: new GitHub(token),
       owner,
       repo,
@@ -30,11 +30,11 @@ async function run(): Promise<void> {
       appSlugFilter
     })
 
-    core.info(`Success? ${success}`)
+    core.info(`Conclusion: ${conclusion}`)
 
-    core.setOutput('conclusion', success ? 'true' : 'false')
+    core.setOutput('conclusion', conclusion)
 
-    if (!success && failStepOnFailure) {
+    if (conclusion !== CheckSuiteConclusion.Success && failStepOnFailure) {
       core.setFailed('One or more of the check suites were unsuccessful.')
     }
   } catch (error) {

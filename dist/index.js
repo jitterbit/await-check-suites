@@ -139,9 +139,7 @@ function getInput() {
     // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
     const repository = core.getInput('repository') || `${github_1.context.repo.owner}/${github_1.context.repo.repo}`;
     const splitRepository = repository.split('/');
-    if (splitRepository.length !== 2 ||
-        !splitRepository[0] ||
-        !splitRepository[1]) {
+    if (splitRepository.length !== 2 || !splitRepository[0] || !splitRepository[1]) {
         throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`);
     }
     // Get the git commit's ref now so it's not pulled multiple times
@@ -149,22 +147,18 @@ function getInput() {
     // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
     let ignoreOwnCheckSuite = parseBoolean_1.parseBoolean(core.getInput('ignoreOwnCheckSuite'));
     if (ignoreOwnCheckSuite &&
-        (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` ||
-            ref !== github_1.context.sha)) {
+        (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` || ref !== github_1.context.sha)) {
         ignoreOwnCheckSuite = false;
     }
     // Default the timeout to null
     const timeoutSecondsInput = core.getInput('timeoutSeconds');
-    let timeoutSeconds = timeoutSecondsInput && timeoutSecondsInput.length > 0
-        ? parseInt(timeoutSecondsInput)
-        : null;
+    let timeoutSeconds = timeoutSecondsInput && timeoutSecondsInput.length > 0 ? parseInt(timeoutSecondsInput) : null;
     if (timeoutSeconds && timeoutSeconds <= 0) {
         timeoutSeconds = null;
     }
     // Default the check suites filter to null
     let appSlugFilter = core.getInput('appSlugFilter');
-    appSlugFilter =
-        appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null;
+    appSlugFilter = appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null;
     return {
         owner: splitRepository[0],
         repo: splitRepository[1],
@@ -1764,7 +1758,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = getInput_1.getInput();
-            const success = yield wait_for_check_suites_1.waitForCheckSuites({
+            const conclusion = yield wait_for_check_suites_1.waitForCheckSuites({
                 client: new github_1.GitHub(token),
                 owner,
                 repo,
@@ -1775,9 +1769,9 @@ function run() {
                 timeoutSeconds,
                 appSlugFilter
             });
-            core.info(`Success? ${success}`);
-            core.setOutput('conclusion', success ? 'true' : 'false');
-            if (!success && failStepOnFailure) {
+            core.info(`Conclusion: ${conclusion}`);
+            core.setOutput('conclusion', conclusion);
+            if (conclusion !== wait_for_check_suites_1.CheckSuiteConclusion.Success && failStepOnFailure) {
                 core.setFailed('One or more of the check suites were unsuccessful.');
             }
         }
@@ -11316,14 +11310,7 @@ var CheckSuiteConclusion;
     CheckSuiteConclusion["Failed"] = "failed";
     CheckSuiteConclusion["Neutral"] = "neutral";
     CheckSuiteConclusion["Success"] = "success";
-})(CheckSuiteConclusion || (CheckSuiteConclusion = {}));
-var CheckTheCheckSuitesResult;
-(function (CheckTheCheckSuitesResult) {
-    CheckTheCheckSuitesResult["Queued"] = "queued";
-    CheckTheCheckSuitesResult["InProgress"] = "in_progress";
-    CheckTheCheckSuitesResult["Success"] = "success";
-    CheckTheCheckSuitesResult["Unsuccessful"] = "unsuccessful";
-})(CheckTheCheckSuitesResult || (CheckTheCheckSuitesResult = {}));
+})(CheckSuiteConclusion = exports.CheckSuiteConclusion || (exports.CheckSuiteConclusion = {}));
 function waitForCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
         const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, appSlugFilter } = options;
@@ -11338,12 +11325,12 @@ function waitForCheckSuites(options) {
                 waitForACheckSuite,
                 appSlugFilter
             });
-            if (result === CheckTheCheckSuitesResult.Success) {
-                resolve(true);
+            if (result === CheckSuiteConclusion.Success) {
+                resolve(CheckSuiteConclusion.Success);
                 return;
             }
-            else if (result === CheckTheCheckSuitesResult.Unsuccessful) {
-                resolve(false);
+            else if (result !== CheckSuiteStatus.Queued && result !== CheckSuiteStatus.InProgress) {
+                resolve(result);
                 return;
             }
             // Is set by setTimeout after the below setInterval
@@ -11359,20 +11346,20 @@ function waitForCheckSuites(options) {
                     waitForACheckSuite,
                     appSlugFilter
                 });
-                if (result === CheckTheCheckSuitesResult.Success) {
+                if (result === CheckSuiteConclusion.Success) {
                     if (timeoutId) {
                         clearTimeout(timeoutId);
                     }
                     clearInterval(intervalId);
-                    resolve(true);
+                    resolve(CheckSuiteConclusion.Success);
                     return;
                 }
-                else if (result === CheckTheCheckSuitesResult.Unsuccessful) {
+                else if (result !== CheckSuiteStatus.Queued && result !== CheckSuiteStatus.InProgress) {
                     if (timeoutId) {
                         clearTimeout(timeoutId);
                     }
                     clearInterval(intervalId);
-                    resolve(false);
+                    resolve(result);
                     return;
                 }
             }), intervalSeconds * 1000);
@@ -11389,24 +11376,24 @@ function waitForCheckSuites(options) {
 exports.waitForCheckSuites = waitForCheckSuites;
 function checkTheCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, appSlugFilter } = options;
+        const { client, owner, repo, ref, 
+        // ignoreOwnCheckSuite,
+        waitForACheckSuite, appSlugFilter } = options;
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             const checkSuitesAndMeta = yield getCheckSuites({
                 client,
                 owner,
                 repo,
-                ref,
-                ignoreOwnCheckSuite
+                ref
             });
-            if (checkSuitesAndMeta.total_count === 0 ||
-                checkSuitesAndMeta.check_suites.length === 0) {
+            if (checkSuitesAndMeta.total_count === 0 || checkSuitesAndMeta.check_suites.length === 0) {
                 if (waitForACheckSuite) {
-                    resolve(CheckTheCheckSuitesResult.Queued);
+                    resolve(CheckSuiteStatus.Queued);
                     return;
                 }
                 else {
                     core.info('No check suites exist for this commit.');
-                    resolve(CheckTheCheckSuitesResult.Success);
+                    resolve(CheckSuiteConclusion.Success);
                     return;
                 }
             }
@@ -11415,42 +11402,31 @@ function checkTheCheckSuites(options) {
                 : checkSuitesAndMeta.check_suites;
             if (checkSuites.length === 0) {
                 if (waitForACheckSuite) {
-                    resolve(CheckTheCheckSuitesResult.Queued);
+                    resolve(CheckSuiteStatus.Queued);
                     return;
                 }
                 else {
                     core.info(`No check suites with the app slug '${appSlugFilter}' exist for this commit.`);
-                    resolve(CheckTheCheckSuitesResult.Success);
+                    resolve(CheckSuiteConclusion.Success);
                     return;
                 }
             }
-            if (isAllCompleted(checkSuites)) {
-                if (isAllSuccessful(checkSuites)) {
-                    resolve(CheckTheCheckSuitesResult.Success);
+            // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further
+            const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites);
+            if (lowestCheckSuiteStatus === CheckSuiteStatus.Completed) {
+                const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites);
+                if (lowestCheckSuiteConclusion === CheckSuiteConclusion.Success) {
+                    resolve(CheckSuiteConclusion.Success);
                 }
                 else {
                     core.error('One or more check suites were unsuccessful. ' +
                         'Below is some metadata on the check suites.');
                     core.error(JSON.stringify(diagnose(checkSuites), null, 2));
-                    resolve(CheckTheCheckSuitesResult.Unsuccessful);
+                    resolve(lowestCheckSuiteConclusion);
                 }
             }
             else {
-                const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites);
-                switch (lowestCheckSuiteStatus) {
-                    case CheckSuiteStatus.Queued: {
-                        resolve(CheckTheCheckSuitesResult.Queued);
-                        break;
-                    }
-                    case CheckSuiteStatus.InProgress: {
-                        resolve(CheckTheCheckSuitesResult.InProgress);
-                        break;
-                    }
-                    default: {
-                        throw new Error(`Lowest check suite status should not be '${lowestCheckSuiteStatus}' since isAllCompleted() returned false. ` +
-                            "Please file an issue on this action's GitHub page.");
-                    }
-                }
+                resolve(lowestCheckSuiteStatus);
             }
         }));
     });
@@ -11483,24 +11459,46 @@ function diagnose(checkSuites) {
         conclusion: checkSuite.conclusion
     }));
 }
-function isAllCompleted(checkSuites) {
-    return checkSuites.every(checkSuite => checkSuite.status === CheckSuiteStatus.Completed);
-}
 function getLowestCheckSuiteStatus(checkSuites) {
-    let lowestStatus = CheckSuiteStatus.Completed;
-    for (const checkSuite of checkSuites) {
-        if (checkSuite.status === CheckSuiteStatus.Queued) {
-            lowestStatus = CheckSuiteStatus.Queued;
-            break;
+    return checkSuites
+        .map(checkSuite => CheckSuiteStatus[checkSuite.status])
+        .reduce((previous, current) => {
+        for (const status of [
+            CheckSuiteStatus.Queued,
+            CheckSuiteStatus.InProgress,
+            CheckSuiteStatus.Completed
+        ]) {
+            if (previous === status) {
+                return previous;
+            }
+            else if (current === status) {
+                return current;
+            }
         }
-        else if (checkSuite.status === CheckSuiteStatus.InProgress) {
-            lowestStatus = CheckSuiteStatus.InProgress;
-        }
-    }
-    return lowestStatus;
+        return current;
+    }, CheckSuiteStatus.Completed);
 }
-function isAllSuccessful(checkSuites) {
-    return checkSuites.every(checkSuite => checkSuite.conclusion === CheckSuiteConclusion.Success);
+function getLowestCheckSuiteConclusion(checkSuites) {
+    return checkSuites
+        .map(checkSuite => CheckSuiteConclusion[checkSuite.conclusion])
+        .reduce((previous, current) => {
+        for (const conclusion of [
+            CheckSuiteConclusion.ActionRequired,
+            CheckSuiteConclusion.Canceled,
+            CheckSuiteConclusion.TimedOut,
+            CheckSuiteConclusion.Failed,
+            CheckSuiteConclusion.Neutral,
+            CheckSuiteConclusion.Success
+        ]) {
+            if (previous === conclusion) {
+                return previous;
+            }
+            else if (current === conclusion) {
+                return current;
+            }
+        }
+        return current;
+    }, CheckSuiteConclusion.Success);
 }
 
 

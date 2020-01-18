@@ -17,17 +17,10 @@ interface Inputs {
 
 export function getInput(): Inputs {
   // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
-  const repository =
-    core.getInput('repository') || `${context.repo.owner}/${context.repo.repo}`
+  const repository = core.getInput('repository') || `${context.repo.owner}/${context.repo.repo}`
   const splitRepository = repository.split('/')
-  if (
-    splitRepository.length !== 2 ||
-    !splitRepository[0] ||
-    !splitRepository[1]
-  ) {
-    throw new Error(
-      `Invalid repository '${repository}'. Expected format {owner}/{repo}.`
-    )
+  if (splitRepository.length !== 2 || !splitRepository[0] || !splitRepository[1]) {
+    throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`)
   }
 
   // Get the git commit's ref now so it's not pulled multiple times
@@ -37,8 +30,7 @@ export function getInput(): Inputs {
   let ignoreOwnCheckSuite = parseBoolean(core.getInput('ignoreOwnCheckSuite'))
   if (
     ignoreOwnCheckSuite &&
-    (repository !== `${context.repo.owner}/${context.repo.repo}` ||
-      ref !== context.sha)
+    (repository !== `${context.repo.owner}/${context.repo.repo}` || ref !== context.sha)
   ) {
     ignoreOwnCheckSuite = false
   }
@@ -46,17 +38,14 @@ export function getInput(): Inputs {
   // Default the timeout to null
   const timeoutSecondsInput = core.getInput('timeoutSeconds')
   let timeoutSeconds: number | null =
-    timeoutSecondsInput && timeoutSecondsInput.length > 0
-      ? parseInt(timeoutSecondsInput)
-      : null
+    timeoutSecondsInput && timeoutSecondsInput.length > 0 ? parseInt(timeoutSecondsInput) : null
   if (timeoutSeconds && timeoutSeconds <= 0) {
     timeoutSeconds = null
   }
 
   // Default the check suites filter to null
   let appSlugFilter: string | null = core.getInput('appSlugFilter')
-  appSlugFilter =
-    appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null
+  appSlugFilter = appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null
 
   return {
     owner: splitRepository[0],

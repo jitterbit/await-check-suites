@@ -10,19 +10,20 @@ runs:
 inputs:
   repository:
     description: >
-      The commit's repository.
-      Defaults to the check run's git repository '${{ github.repository }}'.
+      The commit's repository name with owner.
+      For example, jitterbit/await-check-suites-action.
+      Defaults to the check run's git repository (github.repository).
     required: false
   ref:
     description: >
       The commit's ref (can be a SHA, branch name, or a tag name).
-      Defaults to the check run's git commit's SHA '${{ github.sha }}'.
+      Defaults to the check run's git commit's SHA (github.sha).
     required: false
   token:
     description: >
       GitHub token for GitHub API requests.
       Set to a personal access token when inputs.repository is set to a different repository.
-      Defaults to ${{ github.token }}.
+      Defaults to the check run's github token (github.token).
     required: true
     default: ${{ github.token }}
   ignoreOwnCheckSuite:

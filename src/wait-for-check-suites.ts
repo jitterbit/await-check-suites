@@ -146,6 +146,10 @@ async function checkTheCheckSuites(
       repo,
       ref
     })
+
+    // Log check suites for debugging purposes
+    core.debug(JSON.stringify(checkSuitesAndMeta, null, 2))
+
     if (checkSuitesAndMeta.total_count === 0 || checkSuitesAndMeta.check_suites.length === 0) {
       if (waitForACheckSuite) {
         resolve(CheckSuiteStatus.Queued)

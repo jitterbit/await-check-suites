@@ -84,8 +84,10 @@ export async function waitForCheckSuites(
     })
     if (result === CheckTheCheckSuitesResult.Success) {
       resolve(true)
+      return
     } else if (result === CheckTheCheckSuitesResult.Unsuccessful) {
       resolve(false)
+      return
     }
 
     // Is set by setTimeout after the below setInterval
@@ -105,12 +107,16 @@ export async function waitForCheckSuites(
         if (timeoutId) {
           clearTimeout(timeoutId)
         }
+        clearInterval(intervalId)
         resolve(true)
+        return
       } else if (result === CheckTheCheckSuitesResult.Unsuccessful) {
         if (timeoutId) {
           clearTimeout(timeoutId)
         }
+        clearInterval(intervalId)
         resolve(false)
+        return
       }
     }, intervalSeconds * 1000)
 
@@ -143,6 +149,7 @@ async function checkTheCheckSuites(
     ) {
       core.info('No check suites exist for this commit.')
       resolve(CheckTheCheckSuitesResult.Success)
+      return
     }
     const checkSuites = appSlugFilter
       ? checkSuitesAndMeta.check_suites.filter(
@@ -154,6 +161,7 @@ async function checkTheCheckSuites(
         `No check suites with the app slug '${appSlugFilter}' exist for this commit.`
       )
       resolve(CheckTheCheckSuitesResult.Success)
+      return
     }
     if (isAllCompleted(checkSuites)) {
       if (isAllSuccessful(checkSuites)) {

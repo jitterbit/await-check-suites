@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {GitHub} from '@actions/github'
-import Octokit, {ChecksListSuitesForRefResponseCheckSuitesItem} from '@octokit/rest'
+import Octokit from '@octokit/rest'
 
 /* eslint-disable @typescript-eslint/camelcase */
 enum CheckSuiteStatus {
@@ -53,9 +53,7 @@ interface SimpleCheckSuiteMeta {
   conclusion: CheckSuiteConclusion
 }
 
-export async function waitForCheckSuites(
-  options: WaitForCheckSuitesOptions
-): Promise<CheckSuiteConclusion> {
+export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Promise<CheckSuiteConclusion> {
   const {
     client,
     owner,
@@ -131,15 +129,7 @@ export async function waitForCheckSuites(
 async function checkTheCheckSuites(
   options: CheckTheCheckSuitesOptions
 ): Promise<Exclude<CheckSuiteStatus, CheckSuiteStatus.completed> | CheckSuiteConclusion> {
-  const {
-    client,
-    owner,
-    repo,
-    ref,
-    // ignoreOwnCheckSuite,
-    waitForACheckSuite,
-    appSlugFilter
-  } = options
+  const {client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, appSlugFilter} = options
 
   return new Promise(async resolve => {
     const checkSuitesAndMeta = await getCheckSuites({
@@ -148,9 +138,6 @@ async function checkTheCheckSuites(
       repo,
       ref
     })
-
-    // Log check suites for debugging purposes
-    core.debug(JSON.stringify(checkSuitesAndMeta, null, 2))
 
     if (checkSuitesAndMeta.total_count === 0 || checkSuitesAndMeta.check_suites.length === 0) {
       if (waitForACheckSuite) {
@@ -167,6 +154,9 @@ async function checkTheCheckSuites(
       : checkSuitesAndMeta.check_suites
     if (checkSuites.length === 0) {
       if (waitForACheckSuite) {
+        core.debug(
+          `No check suites with the app slug '${appSlugFilter}' exist for this commit. Waiting for one to show up.`
+        )
         resolve(CheckSuiteStatus.queued)
         return
       } else {
@@ -176,18 +166,18 @@ async function checkTheCheckSuites(
       }
     }
 
-    // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further
+    // Log check suites for debugging purposes
+    core.debug(JSON.stringify(checkSuites, null, 2))
 
-    const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites)
+    // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further, for now skip one in_progress check suite
+
+    const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite)
     if (lowestCheckSuiteStatus === CheckSuiteStatus.completed) {
-      const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites)
+      const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite)
       if (lowestCheckSuiteConclusion === CheckSuiteConclusion.success) {
         resolve(CheckSuiteConclusion.success)
       } else {
-        core.error(
-          'One or more check suites were unsuccessful. ' +
-            'Below is some metadata on the check suites.'
-        )
+        core.error('One or more check suites were unsuccessful. Below is some metadata on the check suites.')
         core.error(JSON.stringify(diagnose(checkSuites), null, 2))
         resolve(lowestCheckSuiteConclusion)
       }
@@ -197,9 +187,7 @@ async function checkTheCheckSuites(
   })
 }
 
-async function getCheckSuites(
-  options: GetCheckSuitesOptions
-): Promise<Octokit.ChecksListSuitesForRefResponse> {
+async function getCheckSuites(options: GetCheckSuitesOptions): Promise<Octokit.ChecksListSuitesForRefResponse> {
   return new Promise(async resolve => {
     const result = await options.client.checks.listSuitesForRef({
       owner: options.owner,
@@ -216,9 +204,7 @@ async function getCheckSuites(
   })
 }
 
-function diagnose(
-  checkSuites: ChecksListSuitesForRefResponseCheckSuitesItem[]
-): SimpleCheckSuiteMeta[] {
+function diagnose(checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[]): SimpleCheckSuiteMeta[] {
   return checkSuites.map<SimpleCheckSuiteMeta>(
     checkSuite =>
       // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
@@ -234,16 +220,18 @@ function diagnose(
 }
 
 function getLowestCheckSuiteStatus(
-  checkSuites: ChecksListSuitesForRefResponseCheckSuitesItem[]
+  checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[],
+  ignoreOwnCheckSuite: boolean
 ): CheckSuiteStatus {
+  let skipOneInProgress = ignoreOwnCheckSuite
   return checkSuites
     .map(checkSuite => CheckSuiteStatus[checkSuite.status as keyof typeof CheckSuiteStatus])
     .reduce((previous, current, currentIndex) => {
-      for (const status of [
-        CheckSuiteStatus.queued,
-        CheckSuiteStatus.in_progress,
-        CheckSuiteStatus.completed
-      ]) {
+      if (skipOneInProgress && current === CheckSuiteStatus.in_progress) {
+        skipOneInProgress = false
+        return previous
+      }
+      for (const status of [CheckSuiteStatus.queued, CheckSuiteStatus.in_progress, CheckSuiteStatus.completed]) {
         if (current === undefined) {
           throw new Error(
             `Check suite status '${checkSuites[currentIndex].status}' can't be mapped to one of the CheckSuiteStatus enum's keys. ` +
@@ -261,13 +249,18 @@ function getLowestCheckSuiteStatus(
 }
 
 function getLowestCheckSuiteConclusion(
-  checkSuites: ChecksListSuitesForRefResponseCheckSuitesItem[]
+  checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[],
+  ignoreOwnCheckSuite: boolean
 ): CheckSuiteConclusion {
+  let skipOneUndefined = ignoreOwnCheckSuite
   return checkSuites
-    .map(
-      checkSuite => CheckSuiteConclusion[checkSuite.conclusion as keyof typeof CheckSuiteConclusion]
-    )
+    .map(checkSuite => CheckSuiteConclusion[checkSuite.conclusion as keyof typeof CheckSuiteConclusion])
     .reduce((previous, current, currentIndex) => {
+      core.debug(`getLowestCheckSuiteConclusion current: ${current}`)
+      if (skipOneUndefined && current === undefined) {
+        skipOneUndefined = false
+        return previous
+      }
       for (const conclusion of [
         CheckSuiteConclusion.action_required,
         CheckSuiteConclusion.canceled,

@@ -146,8 +146,7 @@ function getInput() {
     const ref = core.getInput('ref', { required: true });
     // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
     let ignoreOwnCheckSuite = parseBoolean_1.parseBoolean(core.getInput('ignoreOwnCheckSuite', { required: true }));
-    if (ignoreOwnCheckSuite &&
-        (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` || ref !== github_1.context.sha)) {
+    if (ignoreOwnCheckSuite && (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` || ref !== github_1.context.sha)) {
         ignoreOwnCheckSuite = false;
     }
     // Default the timeout to null
@@ -11377,9 +11376,7 @@ function waitForCheckSuites(options) {
 exports.waitForCheckSuites = waitForCheckSuites;
 function checkTheCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { client, owner, repo, ref, 
-        // ignoreOwnCheckSuite,
-        waitForACheckSuite, appSlugFilter } = options;
+        const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, appSlugFilter } = options;
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             const checkSuitesAndMeta = yield getCheckSuites({
                 client,
@@ -11387,8 +11384,6 @@ function checkTheCheckSuites(options) {
                 repo,
                 ref
             });
-            // Log check suites for debugging purposes
-            core.debug(JSON.stringify(checkSuitesAndMeta, null, 2));
             if (checkSuitesAndMeta.total_count === 0 || checkSuitesAndMeta.check_suites.length === 0) {
                 if (waitForACheckSuite) {
                     resolve(CheckSuiteStatus.queued);
@@ -11405,6 +11400,7 @@ function checkTheCheckSuites(options) {
                 : checkSuitesAndMeta.check_suites;
             if (checkSuites.length === 0) {
                 if (waitForACheckSuite) {
+                    core.debug(`No check suites with the app slug '${appSlugFilter}' exist for this commit. Waiting for one to show up.`);
                     resolve(CheckSuiteStatus.queued);
                     return;
                 }
@@ -11414,16 +11410,17 @@ function checkTheCheckSuites(options) {
                     return;
                 }
             }
-            // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further
-            const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites);
+            // Log check suites for debugging purposes
+            core.debug(JSON.stringify(checkSuites, null, 2));
+            // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further, for now skip one in_progress check suite
+            const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite);
             if (lowestCheckSuiteStatus === CheckSuiteStatus.completed) {
-                const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites);
+                const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite);
                 if (lowestCheckSuiteConclusion === CheckSuiteConclusion.success) {
                     resolve(CheckSuiteConclusion.success);
                 }
                 else {
-                    core.error('One or more check suites were unsuccessful. ' +
-                        'Below is some metadata on the check suites.');
+                    core.error('One or more check suites were unsuccessful. Below is some metadata on the check suites.');
                     core.error(JSON.stringify(diagnose(checkSuites), null, 2));
                     resolve(lowestCheckSuiteConclusion);
                 }
@@ -11462,15 +11459,16 @@ function diagnose(checkSuites) {
         conclusion: checkSuite.conclusion
     }));
 }
-function getLowestCheckSuiteStatus(checkSuites) {
+function getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite) {
+    let skipOneInProgress = ignoreOwnCheckSuite;
     return checkSuites
         .map(checkSuite => CheckSuiteStatus[checkSuite.status])
         .reduce((previous, current, currentIndex) => {
-        for (const status of [
-            CheckSuiteStatus.queued,
-            CheckSuiteStatus.in_progress,
-            CheckSuiteStatus.completed
-        ]) {
+        if (skipOneInProgress && current === CheckSuiteStatus.in_progress) {
+            skipOneInProgress = false;
+            return previous;
+        }
+        for (const status of [CheckSuiteStatus.queued, CheckSuiteStatus.in_progress, CheckSuiteStatus.completed]) {
             if (current === undefined) {
                 throw new Error(`Check suite status '${checkSuites[currentIndex].status}' can't be mapped to one of the CheckSuiteStatus enum's keys. ` +
                     "Please submit an issue on this action's GitHub repo.");
@@ -11485,10 +11483,16 @@ function getLowestCheckSuiteStatus(checkSuites) {
         return current;
     }, CheckSuiteStatus.completed);
 }
-function getLowestCheckSuiteConclusion(checkSuites) {
+function getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite) {
+    let skipOneUndefined = ignoreOwnCheckSuite;
     return checkSuites
         .map(checkSuite => CheckSuiteConclusion[checkSuite.conclusion])
         .reduce((previous, current, currentIndex) => {
+        core.debug(`getLowestCheckSuiteConclusion current: ${current}`);
+        if (skipOneUndefined && current === undefined) {
+            skipOneUndefined = false;
+            return previous;
+        }
         for (const conclusion of [
             CheckSuiteConclusion.action_required,
             CheckSuiteConclusion.canceled,

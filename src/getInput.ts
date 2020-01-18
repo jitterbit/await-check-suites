@@ -28,10 +28,7 @@ export function getInput(): Inputs {
 
   // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
   let ignoreOwnCheckSuite = parseBoolean(core.getInput('ignoreOwnCheckSuite', {required: true}))
-  if (
-    ignoreOwnCheckSuite &&
-    (repository !== `${context.repo.owner}/${context.repo.repo}` || ref !== context.sha)
-  ) {
+  if (ignoreOwnCheckSuite && (repository !== `${context.repo.owner}/${context.repo.repo}` || ref !== context.sha)) {
     ignoreOwnCheckSuite = false
   }
 

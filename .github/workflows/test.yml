@@ -33,8 +33,6 @@ jobs:
       - name: Run the action
         uses: ./
         with:
-          ref: master
-          intervalSeconds: 15
           appSlugFilter: github-actions
 
   race_condition_test:

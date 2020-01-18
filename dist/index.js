@@ -11336,9 +11336,11 @@ function waitForCheckSuites(options) {
             });
             if (result === CheckTheCheckSuitesResult.Success) {
                 resolve(true);
+                return;
             }
             else if (result === CheckTheCheckSuitesResult.Unsuccessful) {
                 resolve(false);
+                return;
             }
             // Is set by setTimeout after the below setInterval
             let timeoutId;
@@ -11356,13 +11358,17 @@ function waitForCheckSuites(options) {
                     if (timeoutId) {
                         clearTimeout(timeoutId);
                     }
+                    clearInterval(intervalId);
                     resolve(true);
+                    return;
                 }
                 else if (result === CheckTheCheckSuitesResult.Unsuccessful) {
                     if (timeoutId) {
                         clearTimeout(timeoutId);
                     }
+                    clearInterval(intervalId);
                     resolve(false);
+                    return;
                 }
             }), intervalSeconds * 1000);
             // Fail action if ${timeoutSeconds} is reached
@@ -11391,6 +11397,7 @@ function checkTheCheckSuites(options) {
                 checkSuitesAndMeta.check_suites.length === 0) {
                 core.info('No check suites exist for this commit.');
                 resolve(CheckTheCheckSuitesResult.Success);
+                return;
             }
             const checkSuites = appSlugFilter
                 ? checkSuitesAndMeta.check_suites.filter(checkSuite => checkSuite.app.slug === appSlugFilter)
@@ -11398,6 +11405,7 @@ function checkTheCheckSuites(options) {
             if (checkSuites.length === 0) {
                 core.info(`No check suites with the app slug '${appSlugFilter}' exist for this commit.`);
                 resolve(CheckTheCheckSuitesResult.Success);
+                return;
             }
             if (isAllCompleted(checkSuites)) {
                 if (isAllSuccessful(checkSuites)) {

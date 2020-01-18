@@ -11,6 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Sleep 1 second
+    - name: Sleep 15 seconds
       run: |
-        sleep 1s
+        sleep 15s

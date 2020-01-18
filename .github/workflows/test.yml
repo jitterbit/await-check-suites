@@ -82,16 +82,21 @@ jobs:
         run: |
           yarn
 
+      - name: Clear dist/
+        run: |
+          rm -rf dist/*
+
       - name: Build, format, lint, package, and test
         run: |
           yarn all
 
       - name: Check if packaged properly
         run: |
-          if ! git diff-index --quiet HEAD; then
+          # If there are any unstaged or untracked files in 'dist/', then the action wasn't packaged properly
+          if ! { git diff --name-only; git ls-files --other --exclude-standard } | sort | uniq | grep '^dist/'; then
             echo "You didn't package the action properly before pushing to remote." \
             echo "Always run 'yarn all' before staging a commit."
-            echo "Below are the modified files after running 'yarn; yarn all':"
-            git diff --name-only
+            echo "Below are the modified files in 'dist/' after running 'yarn && rm -rf dist/ && yarn all':"
+            { git diff --name-only; git ls-files --other --exclude-standard } | sort | uniq | grep '^dist/'
             exit 1
           fi

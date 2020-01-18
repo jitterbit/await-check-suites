@@ -31,7 +31,13 @@ inputs:
       If inputs.repository and inputs.ref reference the commit of the current check run,
       then ignore the check suite for this workflow.
       Defaults to 'true'.
-    required: false
+    required: true
+    default: 'true'
+  waitForACheckSuite:
+    description: >
+      Wait for a check suite to be created if none exist.
+      Defaults to 'true'.
+    required: true
     default: 'true'
   intervalSeconds:
     description: >

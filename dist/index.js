@@ -170,6 +170,7 @@ function getInput() {
         repo: splitRepository[1],
         ref,
         token: core.getInput('token', { required: true }),
+        waitForACheckSuite: parseBoolean_1.parseBoolean(core.getInput('waitForACheckSuite')),
         ignoreOwnCheckSuite,
         intervalSeconds: parseInt(core.getInput('intervalSeconds')),
         timeoutSeconds,
@@ -1762,17 +1763,19 @@ const wait_for_check_suites_1 = __webpack_require__(987);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { owner, repo, ref, token, ignoreOwnCheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = getInput_1.getInput();
+            const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = getInput_1.getInput();
             const success = yield wait_for_check_suites_1.waitForCheckSuites({
                 client: new github_1.GitHub(token),
                 owner,
                 repo,
                 ref,
                 ignoreOwnCheckSuite,
+                waitForACheckSuite,
                 intervalSeconds,
                 timeoutSeconds,
                 appSlugFilter
             });
+            core.info(`Success? ${success}`);
             core.setOutput('conclusion', success ? 'true' : 'false');
             if (!success && failStepOnFailure) {
                 core.setFailed('One or more of the check suites were unsuccessful.');
@@ -11323,7 +11326,7 @@ var CheckTheCheckSuitesResult;
 })(CheckTheCheckSuitesResult || (CheckTheCheckSuitesResult = {}));
 function waitForCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { client, owner, repo, ref, ignoreOwnCheckSuite, intervalSeconds, timeoutSeconds, appSlugFilter } = options;
+        const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, appSlugFilter } = options;
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             // Check to see if all of the check suites have already completed
             let result = yield checkTheCheckSuites({
@@ -11332,6 +11335,7 @@ function waitForCheckSuites(options) {
                 repo,
                 ref,
                 ignoreOwnCheckSuite,
+                waitForACheckSuite,
                 appSlugFilter
             });
             if (result === CheckTheCheckSuitesResult.Success) {
@@ -11352,6 +11356,7 @@ function waitForCheckSuites(options) {
                     repo,
                     ref,
                     ignoreOwnCheckSuite,
+                    waitForACheckSuite,
                     appSlugFilter
                 });
                 if (result === CheckTheCheckSuitesResult.Success) {
@@ -11384,7 +11389,7 @@ function waitForCheckSuites(options) {
 exports.waitForCheckSuites = waitForCheckSuites;
 function checkTheCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { client, owner, repo, ref, ignoreOwnCheckSuite, appSlugFilter } = options;
+        const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, appSlugFilter } = options;
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             const checkSuitesAndMeta = yield getCheckSuites({
                 client,
@@ -11395,17 +11400,29 @@ function checkTheCheckSuites(options) {
             });
             if (checkSuitesAndMeta.total_count === 0 ||
                 checkSuitesAndMeta.check_suites.length === 0) {
-                core.info('No check suites exist for this commit.');
-                resolve(CheckTheCheckSuitesResult.Success);
-                return;
+                if (waitForACheckSuite) {
+                    resolve(CheckTheCheckSuitesResult.Queued);
+                    return;
+                }
+                else {
+                    core.info('No check suites exist for this commit.');
+                    resolve(CheckTheCheckSuitesResult.Success);
+                    return;
+                }
             }
             const checkSuites = appSlugFilter
                 ? checkSuitesAndMeta.check_suites.filter(checkSuite => checkSuite.app.slug === appSlugFilter)
                 : checkSuitesAndMeta.check_suites;
             if (checkSuites.length === 0) {
-                core.info(`No check suites with the app slug '${appSlugFilter}' exist for this commit.`);
-                resolve(CheckTheCheckSuitesResult.Success);
-                return;
+                if (waitForACheckSuite) {
+                    resolve(CheckTheCheckSuitesResult.Queued);
+                    return;
+                }
+                else {
+                    core.info(`No check suites with the app slug '${appSlugFilter}' exist for this commit.`);
+                    resolve(CheckTheCheckSuitesResult.Success);
+                    return;
+                }
             }
             if (isAllCompleted(checkSuites)) {
                 if (isAllSuccessful(checkSuites)) {

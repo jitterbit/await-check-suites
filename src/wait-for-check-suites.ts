@@ -30,6 +30,7 @@ interface WaitForCheckSuitesOptions {
   repo: string
   ref: string
   ignoreOwnCheckSuite: boolean
+  waitForACheckSuite: boolean
   intervalSeconds: number
   timeoutSeconds: number | null
   appSlugFilter: string | null
@@ -40,6 +41,7 @@ interface CheckTheCheckSuitesOptions {
   repo: string
   ref: string
   ignoreOwnCheckSuite: boolean
+  waitForACheckSuite: boolean
   appSlugFilter: string | null
 }
 interface GetCheckSuitesOptions {
@@ -67,6 +69,7 @@ export async function waitForCheckSuites(
     repo,
     ref,
     ignoreOwnCheckSuite,
+    waitForACheckSuite,
     intervalSeconds,
     timeoutSeconds,
     appSlugFilter
@@ -80,6 +83,7 @@ export async function waitForCheckSuites(
       repo,
       ref,
       ignoreOwnCheckSuite,
+      waitForACheckSuite,
       appSlugFilter
     })
     if (result === CheckTheCheckSuitesResult.Success) {
@@ -101,6 +105,7 @@ export async function waitForCheckSuites(
         repo,
         ref,
         ignoreOwnCheckSuite,
+        waitForACheckSuite,
         appSlugFilter
       })
       if (result === CheckTheCheckSuitesResult.Success) {
@@ -133,7 +138,15 @@ export async function waitForCheckSuites(
 async function checkTheCheckSuites(
   options: CheckTheCheckSuitesOptions
 ): Promise<CheckTheCheckSuitesResult> {
-  const {client, owner, repo, ref, ignoreOwnCheckSuite, appSlugFilter} = options
+  const {
+    client,
+    owner,
+    repo,
+    ref,
+    ignoreOwnCheckSuite,
+    waitForACheckSuite,
+    appSlugFilter
+  } = options
 
   return new Promise(async resolve => {
     const checkSuitesAndMeta = await getCheckSuites({
@@ -147,9 +160,14 @@ async function checkTheCheckSuites(
       checkSuitesAndMeta.total_count === 0 ||
       checkSuitesAndMeta.check_suites.length === 0
     ) {
-      core.info('No check suites exist for this commit.')
-      resolve(CheckTheCheckSuitesResult.Success)
-      return
+      if (waitForACheckSuite) {
+        resolve(CheckTheCheckSuitesResult.Queued)
+        return
+      } else {
+        core.info('No check suites exist for this commit.')
+        resolve(CheckTheCheckSuitesResult.Success)
+        return
+      }
     }
     const checkSuites = appSlugFilter
       ? checkSuitesAndMeta.check_suites.filter(
@@ -157,11 +175,16 @@ async function checkTheCheckSuites(
         )
       : checkSuitesAndMeta.check_suites
     if (checkSuites.length === 0) {
-      core.info(
-        `No check suites with the app slug '${appSlugFilter}' exist for this commit.`
-      )
-      resolve(CheckTheCheckSuitesResult.Success)
-      return
+      if (waitForACheckSuite) {
+        resolve(CheckTheCheckSuitesResult.Queued)
+        return
+      } else {
+        core.info(
+          `No check suites with the app slug '${appSlugFilter}' exist for this commit.`
+        )
+        resolve(CheckTheCheckSuitesResult.Success)
+        return
+      }
     }
     if (isAllCompleted(checkSuites)) {
       if (isAllSuccessful(checkSuites)) {

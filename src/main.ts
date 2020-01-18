@@ -11,6 +11,7 @@ async function run(): Promise<void> {
       ref,
       token,
       ignoreOwnCheckSuite,
+      waitForACheckSuite,
       intervalSeconds,
       timeoutSeconds,
       failStepOnFailure,
@@ -23,10 +24,13 @@ async function run(): Promise<void> {
       repo,
       ref,
       ignoreOwnCheckSuite,
+      waitForACheckSuite,
       intervalSeconds,
       timeoutSeconds,
       appSlugFilter
     })
+
+    core.info(`Success? ${success}`)
 
     core.setOutput('conclusion', success ? 'true' : 'false')
 

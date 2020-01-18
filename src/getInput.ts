@@ -8,6 +8,7 @@ interface Inputs {
   ref: string
   token: string
   ignoreOwnCheckSuite: boolean
+  waitForACheckSuite: boolean
   intervalSeconds: number
   timeoutSeconds: number | null
   failStepOnFailure: boolean
@@ -62,6 +63,7 @@ export function getInput(): Inputs {
     repo: splitRepository[1],
     ref,
     token: core.getInput('token', {required: true}),
+    waitForACheckSuite: parseBoolean(core.getInput('waitForACheckSuite')),
     ignoreOwnCheckSuite,
     intervalSeconds: parseInt(core.getInput('intervalSeconds')),
     timeoutSeconds,

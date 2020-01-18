@@ -70,3 +70,28 @@ jobs:
       - name: Get conclusion of the commit's check suite(s)
         run: |
           echo "Conclusion: ${{ steps.await.outputs.conclusion }}"
+
+  is_packaged:
+    name: Check if packaged properly
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          yarn
+
+      - name: Build, format, lint, package, and test
+        run: |
+          yarn all
+
+      - name: Check if packaged properly
+        run: |
+          if ! git diff-index --quiet HEAD; then
+            echo "You didn't package the action properly before pushing to remote." \
+            echo "Always run 'yarn all' before staging a commit."
+            echo "Below are the modified files after running 'yarn; yarn all':"
+            git diff --name-only
+            exit 1
+          fi

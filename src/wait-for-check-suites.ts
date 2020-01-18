@@ -2,19 +2,21 @@ import * as core from '@actions/core'
 import {GitHub} from '@actions/github'
 import Octokit, {ChecksListSuitesForRefResponseCheckSuitesItem} from '@octokit/rest'
 
+/* eslint-disable @typescript-eslint/camelcase */
 enum CheckSuiteStatus {
-  Queued = 'queued',
-  InProgress = 'in_progress',
-  Completed = 'completed'
+  queued = 'queued',
+  in_progress = 'in_progress',
+  completed = 'completed'
 }
 export enum CheckSuiteConclusion {
-  ActionRequired = 'action_required',
-  Canceled = 'canceled',
-  TimedOut = 'timed_out',
-  Failed = 'failed',
-  Neutral = 'neutral',
-  Success = 'success'
+  action_required = 'action_required',
+  canceled = 'canceled',
+  timed_out = 'timed_out',
+  failed = 'failed',
+  neutral = 'neutral',
+  success = 'success'
 }
+/* eslint-enable @typescript-eslint/camelcase */
 
 interface WaitForCheckSuitesOptions {
   client: GitHub
@@ -77,10 +79,10 @@ export async function waitForCheckSuites(
       waitForACheckSuite,
       appSlugFilter
     })
-    if (result === CheckSuiteConclusion.Success) {
-      resolve(CheckSuiteConclusion.Success)
+    if (result === CheckSuiteConclusion.success) {
+      resolve(CheckSuiteConclusion.success)
       return
-    } else if (result !== CheckSuiteStatus.Queued && result !== CheckSuiteStatus.InProgress) {
+    } else if (result !== CheckSuiteStatus.queued && result !== CheckSuiteStatus.in_progress) {
       resolve(result)
       return
     }
@@ -99,14 +101,14 @@ export async function waitForCheckSuites(
         waitForACheckSuite,
         appSlugFilter
       })
-      if (result === CheckSuiteConclusion.Success) {
+      if (result === CheckSuiteConclusion.success) {
         if (timeoutId) {
           clearTimeout(timeoutId)
         }
         clearInterval(intervalId)
-        resolve(CheckSuiteConclusion.Success)
+        resolve(CheckSuiteConclusion.success)
         return
-      } else if (result !== CheckSuiteStatus.Queued && result !== CheckSuiteStatus.InProgress) {
+      } else if (result !== CheckSuiteStatus.queued && result !== CheckSuiteStatus.in_progress) {
         if (timeoutId) {
           clearTimeout(timeoutId)
         }
@@ -128,7 +130,7 @@ export async function waitForCheckSuites(
 
 async function checkTheCheckSuites(
   options: CheckTheCheckSuitesOptions
-): Promise<Exclude<CheckSuiteStatus, CheckSuiteStatus.Completed> | CheckSuiteConclusion> {
+): Promise<Exclude<CheckSuiteStatus, CheckSuiteStatus.completed> | CheckSuiteConclusion> {
   const {
     client,
     owner,
@@ -152,11 +154,11 @@ async function checkTheCheckSuites(
 
     if (checkSuitesAndMeta.total_count === 0 || checkSuitesAndMeta.check_suites.length === 0) {
       if (waitForACheckSuite) {
-        resolve(CheckSuiteStatus.Queued)
+        resolve(CheckSuiteStatus.queued)
         return
       } else {
         core.info('No check suites exist for this commit.')
-        resolve(CheckSuiteConclusion.Success)
+        resolve(CheckSuiteConclusion.success)
         return
       }
     }
@@ -165,11 +167,11 @@ async function checkTheCheckSuites(
       : checkSuitesAndMeta.check_suites
     if (checkSuites.length === 0) {
       if (waitForACheckSuite) {
-        resolve(CheckSuiteStatus.Queued)
+        resolve(CheckSuiteStatus.queued)
         return
       } else {
         core.info(`No check suites with the app slug '${appSlugFilter}' exist for this commit.`)
-        resolve(CheckSuiteConclusion.Success)
+        resolve(CheckSuiteConclusion.success)
         return
       }
     }
@@ -177,10 +179,10 @@ async function checkTheCheckSuites(
     // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further
 
     const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites)
-    if (lowestCheckSuiteStatus === CheckSuiteStatus.Completed) {
+    if (lowestCheckSuiteStatus === CheckSuiteStatus.completed) {
       const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites)
-      if (lowestCheckSuiteConclusion === CheckSuiteConclusion.Success) {
-        resolve(CheckSuiteConclusion.Success)
+      if (lowestCheckSuiteConclusion === CheckSuiteConclusion.success) {
+        resolve(CheckSuiteConclusion.success)
       } else {
         core.error(
           'One or more check suites were unsuccessful. ' +
@@ -236,12 +238,18 @@ function getLowestCheckSuiteStatus(
 ): CheckSuiteStatus {
   return checkSuites
     .map(checkSuite => CheckSuiteStatus[checkSuite.status as keyof typeof CheckSuiteStatus])
-    .reduce((previous, current) => {
+    .reduce((previous, current, currentIndex) => {
       for (const status of [
-        CheckSuiteStatus.Queued,
-        CheckSuiteStatus.InProgress,
-        CheckSuiteStatus.Completed
+        CheckSuiteStatus.queued,
+        CheckSuiteStatus.in_progress,
+        CheckSuiteStatus.completed
       ]) {
+        if (current === undefined) {
+          throw new Error(
+            `Check suite status '${checkSuites[currentIndex].status}' can't be mapped to one of the CheckSuiteStatus enum's keys. ` +
+              "Please submit an issue on this action's GitHub repo."
+          )
+        }
         if (previous === status) {
           return previous
         } else if (current === status) {
@@ -249,7 +257,7 @@ function getLowestCheckSuiteStatus(
         }
       }
       return current
-    }, CheckSuiteStatus.Completed)
+    }, CheckSuiteStatus.completed)
 }
 
 function getLowestCheckSuiteConclusion(
@@ -259,15 +267,21 @@ function getLowestCheckSuiteConclusion(
     .map(
       checkSuite => CheckSuiteConclusion[checkSuite.conclusion as keyof typeof CheckSuiteConclusion]
     )
-    .reduce((previous, current) => {
+    .reduce((previous, current, currentIndex) => {
       for (const conclusion of [
-        CheckSuiteConclusion.ActionRequired,
-        CheckSuiteConclusion.Canceled,
-        CheckSuiteConclusion.TimedOut,
-        CheckSuiteConclusion.Failed,
-        CheckSuiteConclusion.Neutral,
-        CheckSuiteConclusion.Success
+        CheckSuiteConclusion.action_required,
+        CheckSuiteConclusion.canceled,
+        CheckSuiteConclusion.timed_out,
+        CheckSuiteConclusion.failed,
+        CheckSuiteConclusion.neutral,
+        CheckSuiteConclusion.success
       ]) {
+        if (current === undefined) {
+          throw new Error(
+            `Check suite conclusion '${checkSuites[currentIndex].conclusion}' can't be mapped to one of the CheckSuiteConclusion enum's keys. ` +
+              "Please submit an issue on this action's GitHub repo."
+          )
+        }
         if (previous === conclusion) {
           return previous
         } else if (current === conclusion) {
@@ -275,5 +289,5 @@ function getLowestCheckSuiteConclusion(
         }
       }
       return current
-    }, CheckSuiteConclusion.Success)
+    }, CheckSuiteConclusion.success)
 }

@@ -1771,7 +1771,7 @@ function run() {
             });
             core.info(`Conclusion: ${conclusion}`);
             core.setOutput('conclusion', conclusion);
-            if (conclusion !== wait_for_check_suites_1.CheckSuiteConclusion.Success && failStepOnFailure) {
+            if (conclusion !== wait_for_check_suites_1.CheckSuiteConclusion.success && failStepOnFailure) {
                 core.setFailed('One or more of the check suites were unsuccessful.');
             }
         }
@@ -11296,20 +11296,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
+/* eslint-disable @typescript-eslint/camelcase */
 var CheckSuiteStatus;
 (function (CheckSuiteStatus) {
-    CheckSuiteStatus["Queued"] = "queued";
-    CheckSuiteStatus["InProgress"] = "in_progress";
-    CheckSuiteStatus["Completed"] = "completed";
+    CheckSuiteStatus["queued"] = "queued";
+    CheckSuiteStatus["in_progress"] = "in_progress";
+    CheckSuiteStatus["completed"] = "completed";
 })(CheckSuiteStatus || (CheckSuiteStatus = {}));
 var CheckSuiteConclusion;
 (function (CheckSuiteConclusion) {
-    CheckSuiteConclusion["ActionRequired"] = "action_required";
-    CheckSuiteConclusion["Canceled"] = "canceled";
-    CheckSuiteConclusion["TimedOut"] = "timed_out";
-    CheckSuiteConclusion["Failed"] = "failed";
-    CheckSuiteConclusion["Neutral"] = "neutral";
-    CheckSuiteConclusion["Success"] = "success";
+    CheckSuiteConclusion["action_required"] = "action_required";
+    CheckSuiteConclusion["canceled"] = "canceled";
+    CheckSuiteConclusion["timed_out"] = "timed_out";
+    CheckSuiteConclusion["failed"] = "failed";
+    CheckSuiteConclusion["neutral"] = "neutral";
+    CheckSuiteConclusion["success"] = "success";
 })(CheckSuiteConclusion = exports.CheckSuiteConclusion || (exports.CheckSuiteConclusion = {}));
 function waitForCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -11325,11 +11326,11 @@ function waitForCheckSuites(options) {
                 waitForACheckSuite,
                 appSlugFilter
             });
-            if (result === CheckSuiteConclusion.Success) {
-                resolve(CheckSuiteConclusion.Success);
+            if (result === CheckSuiteConclusion.success) {
+                resolve(CheckSuiteConclusion.success);
                 return;
             }
-            else if (result !== CheckSuiteStatus.Queued && result !== CheckSuiteStatus.InProgress) {
+            else if (result !== CheckSuiteStatus.queued && result !== CheckSuiteStatus.in_progress) {
                 resolve(result);
                 return;
             }
@@ -11346,15 +11347,15 @@ function waitForCheckSuites(options) {
                     waitForACheckSuite,
                     appSlugFilter
                 });
-                if (result === CheckSuiteConclusion.Success) {
+                if (result === CheckSuiteConclusion.success) {
                     if (timeoutId) {
                         clearTimeout(timeoutId);
                     }
                     clearInterval(intervalId);
-                    resolve(CheckSuiteConclusion.Success);
+                    resolve(CheckSuiteConclusion.success);
                     return;
                 }
-                else if (result !== CheckSuiteStatus.Queued && result !== CheckSuiteStatus.InProgress) {
+                else if (result !== CheckSuiteStatus.queued && result !== CheckSuiteStatus.in_progress) {
                     if (timeoutId) {
                         clearTimeout(timeoutId);
                     }
@@ -11390,12 +11391,12 @@ function checkTheCheckSuites(options) {
             core.debug(JSON.stringify(checkSuitesAndMeta, null, 2));
             if (checkSuitesAndMeta.total_count === 0 || checkSuitesAndMeta.check_suites.length === 0) {
                 if (waitForACheckSuite) {
-                    resolve(CheckSuiteStatus.Queued);
+                    resolve(CheckSuiteStatus.queued);
                     return;
                 }
                 else {
                     core.info('No check suites exist for this commit.');
-                    resolve(CheckSuiteConclusion.Success);
+                    resolve(CheckSuiteConclusion.success);
                     return;
                 }
             }
@@ -11404,21 +11405,21 @@ function checkTheCheckSuites(options) {
                 : checkSuitesAndMeta.check_suites;
             if (checkSuites.length === 0) {
                 if (waitForACheckSuite) {
-                    resolve(CheckSuiteStatus.Queued);
+                    resolve(CheckSuiteStatus.queued);
                     return;
                 }
                 else {
                     core.info(`No check suites with the app slug '${appSlugFilter}' exist for this commit.`);
-                    resolve(CheckSuiteConclusion.Success);
+                    resolve(CheckSuiteConclusion.success);
                     return;
                 }
             }
             // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further
             const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites);
-            if (lowestCheckSuiteStatus === CheckSuiteStatus.Completed) {
+            if (lowestCheckSuiteStatus === CheckSuiteStatus.completed) {
                 const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites);
-                if (lowestCheckSuiteConclusion === CheckSuiteConclusion.Success) {
-                    resolve(CheckSuiteConclusion.Success);
+                if (lowestCheckSuiteConclusion === CheckSuiteConclusion.success) {
+                    resolve(CheckSuiteConclusion.success);
                 }
                 else {
                     core.error('One or more check suites were unsuccessful. ' +
@@ -11464,12 +11465,16 @@ function diagnose(checkSuites) {
 function getLowestCheckSuiteStatus(checkSuites) {
     return checkSuites
         .map(checkSuite => CheckSuiteStatus[checkSuite.status])
-        .reduce((previous, current) => {
+        .reduce((previous, current, currentIndex) => {
         for (const status of [
-            CheckSuiteStatus.Queued,
-            CheckSuiteStatus.InProgress,
-            CheckSuiteStatus.Completed
+            CheckSuiteStatus.queued,
+            CheckSuiteStatus.in_progress,
+            CheckSuiteStatus.completed
         ]) {
+            if (current === undefined) {
+                throw new Error(`Check suite status '${checkSuites[currentIndex].status}' can't be mapped to one of the CheckSuiteStatus enum's keys. ` +
+                    "Please submit an issue on this action's GitHub repo.");
+            }
             if (previous === status) {
                 return previous;
             }
@@ -11478,20 +11483,24 @@ function getLowestCheckSuiteStatus(checkSuites) {
             }
         }
         return current;
-    }, CheckSuiteStatus.Completed);
+    }, CheckSuiteStatus.completed);
 }
 function getLowestCheckSuiteConclusion(checkSuites) {
     return checkSuites
         .map(checkSuite => CheckSuiteConclusion[checkSuite.conclusion])
-        .reduce((previous, current) => {
+        .reduce((previous, current, currentIndex) => {
         for (const conclusion of [
-            CheckSuiteConclusion.ActionRequired,
-            CheckSuiteConclusion.Canceled,
-            CheckSuiteConclusion.TimedOut,
-            CheckSuiteConclusion.Failed,
-            CheckSuiteConclusion.Neutral,
-            CheckSuiteConclusion.Success
+            CheckSuiteConclusion.action_required,
+            CheckSuiteConclusion.canceled,
+            CheckSuiteConclusion.timed_out,
+            CheckSuiteConclusion.failed,
+            CheckSuiteConclusion.neutral,
+            CheckSuiteConclusion.success
         ]) {
+            if (current === undefined) {
+                throw new Error(`Check suite conclusion '${checkSuites[currentIndex].conclusion}' can't be mapped to one of the CheckSuiteConclusion enum's keys. ` +
+                    "Please submit an issue on this action's GitHub repo.");
+            }
             if (previous === conclusion) {
                 return previous;
             }
@@ -11500,7 +11509,7 @@ function getLowestCheckSuiteConclusion(checkSuites) {
             }
         }
         return current;
-    }, CheckSuiteConclusion.Success);
+    }, CheckSuiteConclusion.success);
 }
 
 

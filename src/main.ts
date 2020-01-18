@@ -34,7 +34,7 @@ async function run(): Promise<void> {
 
     core.setOutput('conclusion', conclusion)
 
-    if (conclusion !== CheckSuiteConclusion.Success && failStepOnFailure) {
+    if (conclusion !== CheckSuiteConclusion.success && failStepOnFailure) {
       core.setFailed('One or more of the check suites were unsuccessful.')
     }
   } catch (error) {

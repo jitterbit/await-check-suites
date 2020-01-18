@@ -144,6 +144,15 @@ function getInput() {
         !splitRepository[1]) {
         throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`);
     }
+    // Get the git commit's ref now so it's not pulled multiple times
+    const ref = core.getInput('ref') || github_1.context.sha;
+    // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
+    let ignoreOwnCheckSuite = parseBoolean_1.parseBoolean(core.getInput('ignoreOwnCheckSuite'));
+    if (ignoreOwnCheckSuite &&
+        (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` ||
+            ref !== github_1.context.sha)) {
+        ignoreOwnCheckSuite = false;
+    }
     // Default the timeout to null
     const timeoutSecondsInput = core.getInput('timeoutSeconds');
     let timeoutSeconds = timeoutSecondsInput && timeoutSecondsInput.length > 0
@@ -159,9 +168,9 @@ function getInput() {
     return {
         owner: splitRepository[0],
         repo: splitRepository[1],
-        ref: core.getInput('ref') || github_1.context.sha,
+        ref,
         token: core.getInput('token', { required: true }),
-        ignoreOwnCheckSuite: parseBoolean_1.parseBoolean(core.getInput('ignoreOwnCheckSuite')),
+        ignoreOwnCheckSuite,
         intervalSeconds: parseInt(core.getInput('intervalSeconds')),
         timeoutSeconds,
         failStepOnFailure: parseBoolean_1.parseBoolean(core.getInput('failStepOnFailure')),
@@ -1754,9 +1763,8 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { owner, repo, ref, token, ignoreOwnCheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = getInput_1.getInput();
-            const octokit = new github_1.GitHub(token);
             const success = yield wait_for_check_suites_1.waitForCheckSuites({
-                client: octokit,
+                client: new github_1.GitHub(token),
                 owner,
                 repo,
                 ref,

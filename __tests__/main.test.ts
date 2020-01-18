@@ -3,6 +3,10 @@
 // import * as cp from 'child_process'
 // import * as path from 'path'
 
+test('todo: add tests', () => {
+  expect(true).toBeTruthy()
+})
+
 // test('throws invalid number', async () => {
 //   const input = parseInt('foo', 10)
 //   await expect(wait(input)).rejects.toThrow(`seconds (${input}) is not a number`)

@@ -17,17 +17,17 @@ interface Inputs {
 
 export function getInput(): Inputs {
   // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
-  const repository = core.getInput('repository') || `${context.repo.owner}/${context.repo.repo}`
+  const repository = core.getInput('repository', {required: true})
   const splitRepository = repository.split('/')
   if (splitRepository.length !== 2 || !splitRepository[0] || !splitRepository[1]) {
     throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`)
   }
 
   // Get the git commit's ref now so it's not pulled multiple times
-  const ref = core.getInput('ref') || context.sha
+  const ref = core.getInput('ref', {required: true})
 
   // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
-  let ignoreOwnCheckSuite = parseBoolean(core.getInput('ignoreOwnCheckSuite'))
+  let ignoreOwnCheckSuite = parseBoolean(core.getInput('ignoreOwnCheckSuite', {required: true}))
   if (
     ignoreOwnCheckSuite &&
     (repository !== `${context.repo.owner}/${context.repo.repo}` || ref !== context.sha)
@@ -52,11 +52,11 @@ export function getInput(): Inputs {
     repo: splitRepository[1],
     ref,
     token: core.getInput('token', {required: true}),
-    waitForACheckSuite: parseBoolean(core.getInput('waitForACheckSuite')),
+    waitForACheckSuite: parseBoolean(core.getInput('waitForACheckSuite', {required: true})),
     ignoreOwnCheckSuite,
-    intervalSeconds: parseInt(core.getInput('intervalSeconds')),
+    intervalSeconds: parseInt(core.getInput('intervalSeconds', {required: true})),
     timeoutSeconds,
-    failStepOnFailure: parseBoolean(core.getInput('failStepOnFailure')),
+    failStepOnFailure: parseBoolean(core.getInput('failStepOnFailure', {required: true})),
     appSlugFilter
   }
 }

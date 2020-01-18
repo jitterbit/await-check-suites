@@ -13,12 +13,14 @@ inputs:
       The commit's repository name with owner.
       For example, jitterbit/await-check-suites-action.
       Defaults to the check run's git repository (github.repository).
-    required: false
+    required: true
+    default: ${{ github.repository }}
   ref:
     description: >
       The commit's ref (can be a SHA, branch name, or a tag name).
       Defaults to the check run's git commit's SHA (github.sha).
-    required: false
+    required: true
+    default: ${{ github.sha }}
   token:
     description: >
       GitHub token for GitHub API requests.
@@ -42,9 +44,9 @@ inputs:
   intervalSeconds:
     description: >
       Number of seconds to wait between checks.
-      Defaults to '60' seconds.
-    required: false
-    default: '60'
+      Defaults to '15' seconds.
+    required: true
+    default: '15'
   timeoutSeconds:
     description: >
       Number of seconds to wait before timing out.
@@ -54,7 +56,7 @@ inputs:
     description: >
       Fail step if any of the check suites complete with a conclusion other than 'success'.
       Defaults to 'true'.
-    required: false
+    required: true
     default: 'true'
   appSlugFilter:
     description: >

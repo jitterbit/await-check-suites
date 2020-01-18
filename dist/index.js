@@ -137,15 +137,15 @@ const github_1 = __webpack_require__(469);
 const parseBoolean_1 = __webpack_require__(905);
 function getInput() {
     // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
-    const repository = core.getInput('repository') || `${github_1.context.repo.owner}/${github_1.context.repo.repo}`;
+    const repository = core.getInput('repository', { required: true });
     const splitRepository = repository.split('/');
     if (splitRepository.length !== 2 || !splitRepository[0] || !splitRepository[1]) {
         throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`);
     }
     // Get the git commit's ref now so it's not pulled multiple times
-    const ref = core.getInput('ref') || github_1.context.sha;
+    const ref = core.getInput('ref', { required: true });
     // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
-    let ignoreOwnCheckSuite = parseBoolean_1.parseBoolean(core.getInput('ignoreOwnCheckSuite'));
+    let ignoreOwnCheckSuite = parseBoolean_1.parseBoolean(core.getInput('ignoreOwnCheckSuite', { required: true }));
     if (ignoreOwnCheckSuite &&
         (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` || ref !== github_1.context.sha)) {
         ignoreOwnCheckSuite = false;
@@ -164,11 +164,11 @@ function getInput() {
         repo: splitRepository[1],
         ref,
         token: core.getInput('token', { required: true }),
-        waitForACheckSuite: parseBoolean_1.parseBoolean(core.getInput('waitForACheckSuite')),
+        waitForACheckSuite: parseBoolean_1.parseBoolean(core.getInput('waitForACheckSuite', { required: true })),
         ignoreOwnCheckSuite,
-        intervalSeconds: parseInt(core.getInput('intervalSeconds')),
+        intervalSeconds: parseInt(core.getInput('intervalSeconds', { required: true })),
         timeoutSeconds,
-        failStepOnFailure: parseBoolean_1.parseBoolean(core.getInput('failStepOnFailure')),
+        failStepOnFailure: parseBoolean_1.parseBoolean(core.getInput('failStepOnFailure', { required: true })),
         appSlugFilter
     };
 }

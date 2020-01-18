@@ -1,33 +1,48 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "await-check-suites-actions",
+  "description": "GitHub action that waits for a commit's check suites to complete",
+  "version": "1.0.0",
   "private": true,
-  "description": "TypeScript template action",
+  "author": "Jitterbit, Inc.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jiterbit/await-check-suites-action.git"
+  },
+  "homepage": "https://github.com/jitterbit/await-check-suites-action#readme",
+  "bugs": {
+    "url": "https://github.com/jitterbit/await-check-suites-action/issues"
+  },
+  "keywords": [
+    "GitHub",
+    "Actions",
+    "TypeScript",
+    "JavaScript",
+    "Wait",
+    "Await",
+    "Commit",
+    "Check",
+    "Suites"
+  ],
   "main": "lib/main.js",
+  "engines": {
+    "node": "^12.0.0"
+  },
   "scripts": {
     "build": "tsc",
     "format": "prettier --write **/*.ts",
-    "format-check": "prettier --check **/*.ts",
+    "format:check": "prettier --check **/*.ts",
     "lint": "eslint src/**/*.ts",
-    "pack": "ncc build",
+    "package": "ncc build",
     "test": "jest",
-    "all": "npm run build && npm run format && npm run lint && npm run pack && npm test"
+    "all": "yarn build && yarn format && yarn lint && yarn package && yarn test"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
-  },
-  "keywords": [
-    "actions",
-    "node",
-    "setup"
-  ],
-  "author": "YourNameOrOrganization",
-  "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.2.0"
+    "@actions/core": "^1.2.0",
+    "@actions/github": "^2.0.1"
   },
   "devDependencies": {
+    "@octokit/rest": "^16.37.0",
     "@types/jest": "^24.0.23",
     "@types/node": "^12.7.12",
     "@typescript-eslint/parser": "^2.8.0",

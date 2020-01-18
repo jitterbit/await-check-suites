@@ -1,23 +1,74 @@
-name: "build-test"
-on: # rebuild any PRs and main branch changes
+name: Test
+
+on:
   pull_request:
   push:
     branches:
       - master
-      - 'releases/*'
+      - releases/*
 
 jobs:
-  build: # make sure build/ci work properly
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - run: |
-        npm install
-        npm run all
-  test: # make sure the action works on a clean machine without building
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        yarn
+
+    - name: Build, format, lint, package, and test
+      run: |
+        yarn all
+
+  simple_test:
+    name: Simple test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: ./
-      with: 
-        milliseconds: 1000
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run the action
+        uses: ./
+        with:
+          ref: master
+          intervalSeconds: 15
+          appSlugFilter: github-actions
+
+  race_condition_test:
+    name: Race condition test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: race_condition_test
+          token: ${{ secrets.GITHUB_PAT }}
+          path: race_condition_test
+
+      - name: Make a commit to the race_condition_test branch
+        run: |
+          cd race_condition_test
+          echo $(date +%s) > trigger_workflow.txt
+          git add trigger_workflow.txt
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "build@jitterbit.com"
+          git commit -m "test: trigger race_condition_test workflow"
+          git push
+
+      - name: Wait for the commit's check suite(s) to complete
+        id: await
+        uses: ./
+        with:
+          ref: race_condition_test
+          intervalSeconds: 15
+          appSlugFilter: github-actions
+
+      - name: Get conclusion of the commit's check suite(s)
+        run: |
+          echo "Conclusion: ${{ steps.await.outputs.conclusion }}"

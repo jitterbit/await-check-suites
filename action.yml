@@ -1,10 +1,61 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
-inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+name: Await Check Suites
+description: Wait for a commit's check suites to complete
+author: Jitterbit, Inc.
+branding:
+  icon: 'watch'
+  color: 'purple'
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  using: node12
+  main: dist/index.js
+inputs:
+  repository:
+    description: >
+      The commit's repository.
+      Defaults to the check run's git repository '${{ github.repository }}'.
+    required: false
+  ref:
+    description: >
+      The commit's ref (can be a SHA, branch name, or a tag name).
+      Defaults to the check run's git commit's SHA '${{ github.sha }}'.
+    required: false
+  token:
+    description: >
+      GitHub token for GitHub API requests.
+      Set to a personal access token when inputs.repository is set to a different repository.
+      Defaults to ${{ github.token }}.
+    required: true
+    default: ${{ github.token }}
+  ignoreOwnCheckSuite:
+    description: >
+      If inputs.repository and inputs.ref reference the commit of the current check run,
+      then ignore the check suite for this workflow.
+      Defaults to 'true'.
+    required: false
+    default: 'true'
+  intervalSeconds:
+    description: >
+      Number of seconds to wait between checks.
+      Defaults to '60' seconds.
+    required: false
+    default: '60'
+  timeoutSeconds:
+    description: >
+      Number of seconds to wait before timing out.
+      Defaults to no timeout.
+    required: false
+  failStepOnFailure:
+    description: >
+      Fail step if any of the check suites complete with a conclusion other than 'success'.
+      Defaults to 'true'.
+    required: false
+    default: 'true'
+  appSlugFilter:
+    description: >
+      Filter check suites for a particular app's slug (e.g., 'github-actions').
+      Defaults to no filter.
+    required: false
+
+outputs:
+  conclusion:
+    description: >
+      The combined conclusion of all check suites.

@@ -1,16 +1,38 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import {GitHub} from '@actions/github'
+import {getInput} from './getInput'
+import {waitForCheckSuites} from './wait-for-check-suites'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const {
+      owner,
+      repo,
+      ref,
+      token,
+      ignoreOwnCheckSuite,
+      intervalSeconds,
+      timeoutSeconds,
+      failStepOnFailure,
+      appSlugFilter
+    } = getInput()
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const success = await waitForCheckSuites({
+      client: new GitHub(token),
+      owner,
+      repo,
+      ref,
+      ignoreOwnCheckSuite,
+      intervalSeconds,
+      timeoutSeconds,
+      appSlugFilter
+    })
 
-    core.setOutput('time', new Date().toTimeString())
+    core.setOutput('conclusion', success ? 'true' : 'false')
+
+    if (!success && failStepOnFailure) {
+      core.setFailed('One or more of the check suites were unsuccessful.')
+    }
   } catch (error) {
     core.setFailed(error.message)
   }

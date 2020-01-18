@@ -1,34 +1,50 @@
 <p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
+  <a href="https://github.com/jitterbit/await-check-suites-action/actions"><img alt="jitterbit/await-check-suites-action status" src="https://github.com/jitterbit/await-check-suites-action/workflows/Test/badge.svg"></a>
 </p>
 
-# Create a JavaScript Action using TypeScript
+# Await Check Suites Action
 
-Use this template to bootstrap the creation of a JavaScript action.:rocket:
+Wait for a commit's check suites to complete.
 
-This template includes compilication support, tests, a validation workflow, publishing, and versioning guidance.  
+## Install, Lint, Test, and Package
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
-
-## Create an action from this template
-
-Click the `Use this Template` and provide the new repo details for your action
-
-## Code in Master
-
-Install the dependencies  
+Install the dependencies
 ```bash
-$ npm install
+$ yarn
+
+[1/4] 🔍  Resolving packages...
+success Already up-to-date.
+✨  Done in 0.30s.
 ```
 
-Build the typescript
+Build the TypeScript
 ```bash
-$ npm run build
+$ yarn build
+
+✨  Done in 4.05s.
 ```
 
-Run the tests :heavy_check_mark:  
+Lint the TypeScript
 ```bash
-$ npm test
+$ yarn lint
+
+✨  Done in 2.42s.
+```
+
+Package the action up in `dist/`
+```bash
+$ yarn package
+
+ncc: Version 0.20.5
+ncc: Compiling file index.js
+13kB  dist/index.js
+13kB  [281ms] - ncc 0.20.5
+✨  Done in 0.85s.
+```
+
+Run the tests :heavy_check_mark:
+```bash
+$ yarn test
 
  PASS  ./index.test.js
   ✓ throws invalid number (3ms)
@@ -38,80 +54,16 @@ $ npm test
 ...
 ```
 
-## Change action.yml
-
-The action.yml contains defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
-```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos.  We will create a releases branch and only checkin production modules (core in this case). 
-
-Comment out node_modules in .gitignore and create a releases/v1 branch
+Do all of the above
 ```bash
-# comment out in distribution branches
-# node_modules/
+$ yarn
+$ yarn all
 ```
-
-```bash
-$ git checkout -b releases/v1
-$ git commit -a -m "prod dependencies"
-```
-
-```bash
-$ npm prune --production
-$ git add node_modules
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing the releases/v1 branch
-
-```yaml
-uses: actions/typescript-action@releases/v1
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/javascript-action/actions) for runs of this action! :rocket:
 
 ## Usage:
 
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and tested action
-
 ```yaml
-uses: actions/typescript-action@v1
+uses: jitterbit/await-check-suites-action@v1
 with:
   milliseconds: 1000
 ```

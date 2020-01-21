@@ -11305,10 +11305,10 @@ var CheckSuiteStatus;
 var CheckSuiteConclusion;
 (function (CheckSuiteConclusion) {
     CheckSuiteConclusion["action_required"] = "action_required";
-    CheckSuiteConclusion["canceled"] = "canceled";
     CheckSuiteConclusion["timed_out"] = "timed_out";
-    CheckSuiteConclusion["failed"] = "failed";
+    CheckSuiteConclusion["cancelled"] = "cancelled";
     CheckSuiteConclusion["neutral"] = "neutral";
+    CheckSuiteConclusion["failure"] = "failure";
     CheckSuiteConclusion["success"] = "success";
 })(CheckSuiteConclusion = exports.CheckSuiteConclusion || (exports.CheckSuiteConclusion = {}));
 function waitForCheckSuites(options) {
@@ -11495,10 +11495,10 @@ function getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite) {
         }
         for (const conclusion of [
             CheckSuiteConclusion.action_required,
-            CheckSuiteConclusion.canceled,
+            CheckSuiteConclusion.cancelled,
             CheckSuiteConclusion.timed_out,
-            CheckSuiteConclusion.failed,
             CheckSuiteConclusion.neutral,
+            CheckSuiteConclusion.failure,
             CheckSuiteConclusion.success
         ]) {
             if (current === undefined) {

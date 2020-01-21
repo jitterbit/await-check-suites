@@ -10,10 +10,10 @@ enum CheckSuiteStatus {
 }
 export enum CheckSuiteConclusion {
   action_required = 'action_required',
-  canceled = 'canceled',
   timed_out = 'timed_out',
-  failed = 'failed',
+  cancelled = 'cancelled',
   neutral = 'neutral',
+  failure = 'failure',
   success = 'success'
 }
 /* eslint-enable @typescript-eslint/camelcase */
@@ -263,10 +263,10 @@ function getLowestCheckSuiteConclusion(
       }
       for (const conclusion of [
         CheckSuiteConclusion.action_required,
-        CheckSuiteConclusion.canceled,
+        CheckSuiteConclusion.cancelled,
         CheckSuiteConclusion.timed_out,
-        CheckSuiteConclusion.failed,
         CheckSuiteConclusion.neutral,
+        CheckSuiteConclusion.failure,
         CheckSuiteConclusion.success
       ]) {
         if (current === undefined) {

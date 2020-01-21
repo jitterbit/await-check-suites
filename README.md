@@ -6,64 +6,83 @@
 
 Wait for a commit's check suites to complete.
 
-## Install, Lint, Test, and Package
+# Usage
 
-Install the dependencies
-```bash
-$ yarn
+See [action.yml](action.yml)
 
-[1/4] 🔍  Resolving packages...
-success Already up-to-date.
-✨  Done in 0.30s.
+```yaml
+- uses: jitterbit/await-check-suites-action@v1
+  with:
+    # The commit's repository name with owner.
+    # For example, jitterbit/await-check-suites-action.
+    # Default: ${{ github.repository }}
+    repository: ''
+
+    # The commit's ref (can be a SHA, branch name, or a tag name).
+    # Default: ${{ github.sha }}
+    ref: ''
+
+    # GitHub token for GitHub API requests.
+    # When `repository` is modified, set to a personal access token with access to `repository`.
+    # Default: ${{ github.token }}
+    token: ''
+
+    # If `repository` and `ref` reference the commit of the current check run (true by default),
+    # then ignore the check suite for this workflow.
+    # Default: true
+    ignoreOwnCheckSuite: ''
+
+    # Wait for a check suite to be created if none exist.
+    # This is important to protect against race conditions
+    # if you know a check suite should exist on the `ref`'s commit.
+    # Default: true
+    waitForACheckSuite: ''
+
+    # Number of seconds to wait between checks.
+    # Default: 15
+    intervalSeconds: ''
+
+    # Number of seconds to wait before timing out.
+    timeoutSeconds: ''
+
+    # Fail step if any of the check suites complete with a conclusion other than 'success'.
+    # Default: true
+    failStepOnFailure: ''
+
+    # Filter check suites for a particular app's slug (e.g., 'github-actions').
+    appSlugFilter: ''
 ```
 
-Build the TypeScript
-```bash
-$ yarn build
+# Scenarios
 
-✨  Done in 4.05s.
+- [Wait for other check suites on this commit to complete](#Wait-for-other-check-suites-on-this-commit-to-complete)
+- [Wait for all check suites on a commit in another repo to complete](#Wait-for-all-check-suites-on-a-commit-in-another-repo-to-complete)
+
+## Wait for other check suites on this commit to complete
+
+```yaml
+- uses: jitterbit/await-check-suites-action@v1
 ```
 
-Lint the TypeScript
-```bash
-$ yarn lint
+## Wait for all check suites on a commit in another repo to complete
 
-✨  Done in 2.42s.
+```yaml
+- uses: jitterbit/await-check-suites-action@v1
+  with:
+    repository: jitterbit/git-ops
+    ref: ${{ env.git_ops_commit_sha }}
+    token: ${{ secrets.GITHUB_PAT }}
 ```
 
-Package the action up in `dist/`
-```bash
-$ yarn package
+# Install, Build, Lint, Test, and Package
 
-ncc: Version 0.20.5
-ncc: Compiling file index.js
-13kB  dist/index.js
-13kB  [281ms] - ncc 0.20.5
-✨  Done in 0.85s.
-```
+Make sure to do the following before checking in any code changes.
 
-Run the tests :heavy_check_mark:
-```bash
-$ yarn test
-
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-
-...
-```
-
-Do all of the above
 ```bash
 $ yarn
 $ yarn all
 ```
 
-## Usage:
+# License
 
-```yaml
-uses: jitterbit/await-check-suites-action@v1
-with:
-  milliseconds: 1000
-```
+The scripts and documentation in this project are released under the [MIT License](LICENSE)

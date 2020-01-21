@@ -12,56 +12,49 @@ inputs:
     description: >
       The commit's repository name with owner.
       For example, jitterbit/await-check-suites-action.
-      Defaults to the check run's git repository (github.repository).
     required: true
     default: ${{ github.repository }}
   ref:
     description: >
       The commit's ref (can be a SHA, branch name, or a tag name).
-      Defaults to the check run's git commit's SHA (github.sha).
     required: true
     default: ${{ github.sha }}
   token:
     description: >
       GitHub token for GitHub API requests.
-      Set to a personal access token when inputs.repository is set to a different repository.
-      Defaults to the check run's github token (github.token).
+      When `repository` is modified, set to a personal access token with access to `repository`.
     required: true
     default: ${{ github.token }}
   ignoreOwnCheckSuite:
     description: >
-      If inputs.repository and inputs.ref reference the commit of the current check run,
+      If `repository` and `ref` reference the commit of the current check run (true by default),
       then ignore the check suite for this workflow.
-      Defaults to 'true'.
     required: true
     default: 'true'
   waitForACheckSuite:
     description: >
       Wait for a check suite to be created if none exist.
-      Defaults to 'true'.
+      This is important to protect against race conditions
+      if you know a check suite should exist on the `ref`'s commit.
     required: true
     default: 'true'
   intervalSeconds:
     description: >
       Number of seconds to wait between checks.
-      Defaults to '15' seconds.
     required: true
     default: '15'
   timeoutSeconds:
     description: >
       Number of seconds to wait before timing out.
-      Defaults to no timeout.
     required: false
   failStepOnFailure:
     description: >
       Fail step if any of the check suites complete with a conclusion other than 'success'.
-      Defaults to 'true'.
     required: true
     default: 'true'
   appSlugFilter:
     description: >
       Filter check suites for a particular app's slug (e.g., 'github-actions').
-      Defaults to no filter.
     required: false
 
 outputs:

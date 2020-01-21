@@ -3,17 +3,19 @@ import {GitHub} from '@actions/github'
 import Octokit from '@octokit/rest'
 
 /* eslint-disable @typescript-eslint/camelcase */
+// All possible Check Suite statuses in descending order of priority
 enum CheckSuiteStatus {
   queued = 'queued',
   in_progress = 'in_progress',
   completed = 'completed'
 }
+// All possible Check Suite conclusions in descending order of priority
 export enum CheckSuiteConclusion {
   action_required = 'action_required',
-  timed_out = 'timed_out',
   cancelled = 'cancelled',
-  neutral = 'neutral',
+  timed_out = 'timed_out',
   failure = 'failure',
+  neutral = 'neutral',
   success = 'success'
 }
 /* eslint-enable @typescript-eslint/camelcase */
@@ -172,18 +174,21 @@ async function checkTheCheckSuites(
     // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further,
     //  for now skip one in_progress check suite status and one null check suite conclusion
 
-    const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite)
-    if (lowestCheckSuiteStatus === CheckSuiteStatus.completed) {
-      const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite)
-      if (lowestCheckSuiteConclusion === CheckSuiteConclusion.success) {
+    const highestPriorityCheckSuiteStatus = getHighestPriorityCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite)
+    if (highestPriorityCheckSuiteStatus === CheckSuiteStatus.completed) {
+      const highestPriorityCheckSuiteConclusion = getHighestPriorityCheckSuiteConclusion(
+        checkSuites,
+        ignoreOwnCheckSuite
+      )
+      if (highestPriorityCheckSuiteConclusion === CheckSuiteConclusion.success) {
         resolve(CheckSuiteConclusion.success)
       } else {
         core.error('One or more check suites were unsuccessful. Below is some metadata on the check suites.')
-        core.error(JSON.stringify(diagnose(checkSuites), null, 2))
-        resolve(lowestCheckSuiteConclusion)
+        core.error(JSON.stringify(diagnose(checkSuites)))
+        resolve(highestPriorityCheckSuiteConclusion)
       }
     } else {
-      resolve(lowestCheckSuiteStatus)
+      resolve(highestPriorityCheckSuiteStatus)
     }
   })
 }
@@ -220,7 +225,7 @@ function diagnose(checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuites
   )
 }
 
-function getLowestCheckSuiteStatus(
+function getHighestPriorityCheckSuiteStatus(
   checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[],
   ignoreOwnCheckSuite: boolean
 ): CheckSuiteStatus {
@@ -232,7 +237,7 @@ function getLowestCheckSuiteStatus(
         skipOneInProgress = false
         return previous
       }
-      for (const status of [CheckSuiteStatus.queued, CheckSuiteStatus.in_progress, CheckSuiteStatus.completed]) {
+      for (const status of Object.keys(CheckSuiteStatus)) {
         if (current === undefined) {
           throw new Error(
             `Check suite status '${checkSuites[currentIndex].status}' can't be mapped to one of the CheckSuiteStatus enum's keys. ` +
@@ -249,7 +254,7 @@ function getLowestCheckSuiteStatus(
     }, CheckSuiteStatus.completed)
 }
 
-function getLowestCheckSuiteConclusion(
+function getHighestPriorityCheckSuiteConclusion(
   checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[],
   ignoreOwnCheckSuite: boolean
 ): CheckSuiteConclusion {
@@ -261,14 +266,7 @@ function getLowestCheckSuiteConclusion(
         skipOneUndefined = false
         return previous
       }
-      for (const conclusion of [
-        CheckSuiteConclusion.action_required,
-        CheckSuiteConclusion.cancelled,
-        CheckSuiteConclusion.timed_out,
-        CheckSuiteConclusion.neutral,
-        CheckSuiteConclusion.failure,
-        CheckSuiteConclusion.success
-      ]) {
+      for (const conclusion of Object.keys(CheckSuiteConclusion)) {
         if (current === undefined) {
           throw new Error(
             `Check suite conclusion '${checkSuites[currentIndex].conclusion}' can't be mapped to one of the CheckSuiteConclusion enum's keys. ` +

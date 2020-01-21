@@ -11296,19 +11296,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 /* eslint-disable @typescript-eslint/camelcase */
+// All possible Check Suite statuses in descending order of priority
 var CheckSuiteStatus;
 (function (CheckSuiteStatus) {
     CheckSuiteStatus["queued"] = "queued";
     CheckSuiteStatus["in_progress"] = "in_progress";
     CheckSuiteStatus["completed"] = "completed";
 })(CheckSuiteStatus || (CheckSuiteStatus = {}));
+// All possible Check Suite conclusions in descending order of priority
 var CheckSuiteConclusion;
 (function (CheckSuiteConclusion) {
     CheckSuiteConclusion["action_required"] = "action_required";
-    CheckSuiteConclusion["timed_out"] = "timed_out";
     CheckSuiteConclusion["cancelled"] = "cancelled";
-    CheckSuiteConclusion["neutral"] = "neutral";
+    CheckSuiteConclusion["timed_out"] = "timed_out";
     CheckSuiteConclusion["failure"] = "failure";
+    CheckSuiteConclusion["neutral"] = "neutral";
     CheckSuiteConclusion["success"] = "success";
 })(CheckSuiteConclusion = exports.CheckSuiteConclusion || (exports.CheckSuiteConclusion = {}));
 function waitForCheckSuites(options) {
@@ -11414,20 +11416,20 @@ function checkTheCheckSuites(options) {
             core.debug(JSON.stringify(checkSuites, null, 2));
             // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further,
             //  for now skip one in_progress check suite status and one null check suite conclusion
-            const lowestCheckSuiteStatus = getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite);
-            if (lowestCheckSuiteStatus === CheckSuiteStatus.completed) {
-                const lowestCheckSuiteConclusion = getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite);
-                if (lowestCheckSuiteConclusion === CheckSuiteConclusion.success) {
+            const highestPriorityCheckSuiteStatus = getHighestPriorityCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite);
+            if (highestPriorityCheckSuiteStatus === CheckSuiteStatus.completed) {
+                const highestPriorityCheckSuiteConclusion = getHighestPriorityCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite);
+                if (highestPriorityCheckSuiteConclusion === CheckSuiteConclusion.success) {
                     resolve(CheckSuiteConclusion.success);
                 }
                 else {
                     core.error('One or more check suites were unsuccessful. Below is some metadata on the check suites.');
-                    core.error(JSON.stringify(diagnose(checkSuites), null, 2));
-                    resolve(lowestCheckSuiteConclusion);
+                    core.error(JSON.stringify(diagnose(checkSuites)));
+                    resolve(highestPriorityCheckSuiteConclusion);
                 }
             }
             else {
-                resolve(lowestCheckSuiteStatus);
+                resolve(highestPriorityCheckSuiteStatus);
             }
         }));
     });
@@ -11460,7 +11462,7 @@ function diagnose(checkSuites) {
         conclusion: checkSuite.conclusion
     }));
 }
-function getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite) {
+function getHighestPriorityCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite) {
     let skipOneInProgress = ignoreOwnCheckSuite;
     return checkSuites
         .map(checkSuite => CheckSuiteStatus[checkSuite.status])
@@ -11469,7 +11471,7 @@ function getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite) {
             skipOneInProgress = false;
             return previous;
         }
-        for (const status of [CheckSuiteStatus.queued, CheckSuiteStatus.in_progress, CheckSuiteStatus.completed]) {
+        for (const status of Object.keys(CheckSuiteStatus)) {
             if (current === undefined) {
                 throw new Error(`Check suite status '${checkSuites[currentIndex].status}' can't be mapped to one of the CheckSuiteStatus enum's keys. ` +
                     "Please submit an issue on this action's GitHub repo.");
@@ -11484,7 +11486,7 @@ function getLowestCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite) {
         return current;
     }, CheckSuiteStatus.completed);
 }
-function getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite) {
+function getHighestPriorityCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite) {
     let skipOneUndefined = ignoreOwnCheckSuite;
     return checkSuites
         .map(checkSuite => CheckSuiteConclusion[checkSuite.conclusion])
@@ -11493,14 +11495,7 @@ function getLowestCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite) {
             skipOneUndefined = false;
             return previous;
         }
-        for (const conclusion of [
-            CheckSuiteConclusion.action_required,
-            CheckSuiteConclusion.cancelled,
-            CheckSuiteConclusion.timed_out,
-            CheckSuiteConclusion.neutral,
-            CheckSuiteConclusion.failure,
-            CheckSuiteConclusion.success
-        ]) {
+        for (const conclusion of Object.keys(CheckSuiteConclusion)) {
             if (current === undefined) {
                 throw new Error(`Check suite conclusion '${checkSuites[currentIndex].conclusion}' can't be mapped to one of the CheckSuiteConclusion enum's keys. ` +
                     "Please submit an issue on this action's GitHub repo.");

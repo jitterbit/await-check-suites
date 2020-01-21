@@ -240,7 +240,9 @@ function getHighestPriorityCheckSuiteStatus(
       for (const status of Object.keys(CheckSuiteStatus)) {
         if (current === undefined) {
           throw new Error(
-            `Check suite status '${checkSuites[currentIndex].status}' can't be mapped to one of the CheckSuiteStatus enum's keys. ` +
+            `Check suite status '${checkSuites[currentIndex].status}' ('${
+              CheckSuiteStatus[checkSuites[currentIndex].status as keyof typeof CheckSuiteStatus]
+            }') can't be mapped to one of the CheckSuiteStatus enum's keys. ` +
               "Please submit an issue on this action's GitHub repo."
           )
         }
@@ -269,7 +271,9 @@ function getHighestPriorityCheckSuiteConclusion(
       for (const conclusion of Object.keys(CheckSuiteConclusion)) {
         if (current === undefined) {
           throw new Error(
-            `Check suite conclusion '${checkSuites[currentIndex].conclusion}' can't be mapped to one of the CheckSuiteConclusion enum's keys. ` +
+            `Check suite conclusion '${checkSuites[currentIndex].conclusion}' ('${
+              CheckSuiteConclusion[checkSuites[currentIndex].conclusion as keyof typeof CheckSuiteConclusion]
+            }') can't be mapped to one of the CheckSuiteConclusion enum's keys. ` +
               "Please submit an issue on this action's GitHub repo."
           )
         }

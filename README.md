@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/jitterbit/await-check-suites-action/actions"><img alt="jitterbit/await-check-suites-action status" src="https://github.com/jitterbit/await-check-suites-action/workflows/Test/badge.svg"></a>
+  <a href="https://github.com/jitterbit/await-check-suites/actions"><img alt="jitterbit/await-check-suites status" src="https://github.com/jitterbit/await-check-suites/workflows/Test/badge.svg"></a>
 </p>
 
 # Await Check Suites Action
@@ -11,10 +11,10 @@ Wait for a commit's check suites to complete.
 See [action.yml](action.yml)
 
 ```yaml
-- uses: jitterbit/await-check-suites-action@v1
+- uses: jitterbit/await-check-suites@v1
   with:
     # The commit's repository name with owner.
-    # For example, jitterbit/await-check-suites-action.
+    # For example, jitterbit/await-check-suites.
     # Default: ${{ github.repository }}
     repository: ''
 
@@ -61,13 +61,13 @@ See [action.yml](action.yml)
 ## Wait for other check suites on this commit to complete
 
 ```yaml
-- uses: jitterbit/await-check-suites-action@v1
+- uses: jitterbit/await-check-suites@v1
 ```
 
 ## Wait for all check suites on a commit in another repo to complete
 
 ```yaml
-- uses: jitterbit/await-check-suites-action@v1
+- uses: jitterbit/await-check-suites@v1
   with:
     repository: jitterbit/git-ops
     ref: ${{ env.git_ops_commit_sha }}

@@ -1,5 +1,5 @@
 {
-  "name": "await-check-suites-actions",
+  "name": "await-check-suites",
   "description": "GitHub action that waits for a commit's check suites to complete",
   "version": "1.0.0",
   "private": true,
@@ -7,11 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jiterbit/await-check-suites-action.git"
+    "url": "git+https://github.com/jiterbit/await-check-suites.git"
   },
-  "homepage": "https://github.com/jitterbit/await-check-suites-action#readme",
+  "homepage": "https://github.com/jitterbit/await-check-suites#readme",
   "bugs": {
-    "url": "https://github.com/jitterbit/await-check-suites-action/issues"
+    "url": "https://github.com/jitterbit/await-check-suites/issues"
   },
   "keywords": [
     "GitHub",

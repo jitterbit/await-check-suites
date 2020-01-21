@@ -11,7 +11,7 @@ inputs:
   repository:
     description: >
       The commit's repository name with owner.
-      For example, jitterbit/await-check-suites-action.
+      For example, `jitterbit/await-check-suites`.
     required: true
     default: ${{ github.repository }}
   ref:

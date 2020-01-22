@@ -508,17 +508,19 @@ const core = __importStar(__webpack_require__(470));
 const github_1 = __webpack_require__(469);
 const parse_boolean_1 = __webpack_require__(146);
 function getInput() {
-    core.debug(JSON.stringify({ ref: github_1.context.ref, sha: github_1.context.sha }));
+    core.debug(JSON.stringify({ repository: `${github_1.context.repo.owner}/${github_1.context.repo.repo}`, ref: github_1.context.ref, sha: github_1.context.sha }));
     // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
     const repository = core.getInput('repository', { required: true });
     const splitRepository = repository.split('/');
     if (splitRepository.length !== 2 || !splitRepository[0] || !splitRepository[1]) {
         throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`);
     }
+    const owner = splitRepository[0];
+    const repo = splitRepository[1];
     // Get the git commit's ref now so it's not pulled multiple times
     const ref = core.getInput('ref', { required: true });
     // ignoreOwnCheckSuite should be true if repository and ref reference the same commit of the current check run
-    const ignoreOwnCheckSuite = repository === `${github_1.context.repo.owner}/${github_1.context.repo.repo}` && ref === github_1.context.sha;
+    const ignoreOwnCheckSuite = owner === github_1.context.repo.owner && repo === github_1.context.repo.repo && ref === github_1.context.sha;
     // Default the timeout to null
     const timeoutSecondsInput = core.getInput('timeoutSeconds');
     let timeoutSeconds = timeoutSecondsInput && timeoutSecondsInput.length > 0 ? parseInt(timeoutSecondsInput) : null;
@@ -529,8 +531,8 @@ function getInput() {
     let appSlugFilter = core.getInput('appSlugFilter');
     appSlugFilter = appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null;
     return {
-        owner: splitRepository[0],
-        repo: splitRepository[1],
+        owner,
+        repo,
         ref,
         token: core.getInput('token', { required: true }),
         waitForACheckSuite: parse_boolean_1.parseBoolean(core.getInput('waitForACheckSuite', { required: true })),

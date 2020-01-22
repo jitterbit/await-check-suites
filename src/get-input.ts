@@ -16,7 +16,9 @@ interface Inputs {
 }
 
 export function getInput(): Inputs {
-  core.debug(JSON.stringify({ref: context.ref, sha: context.sha}))
+  core.debug(
+    JSON.stringify({repository: `${context.repo.owner}/${context.repo.repo}`, ref: context.ref, sha: context.sha})
+  )
 
   // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
   const repository = core.getInput('repository', {required: true})
@@ -24,12 +26,14 @@ export function getInput(): Inputs {
   if (splitRepository.length !== 2 || !splitRepository[0] || !splitRepository[1]) {
     throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`)
   }
+  const owner = splitRepository[0]
+  const repo = splitRepository[1]
 
   // Get the git commit's ref now so it's not pulled multiple times
   const ref = core.getInput('ref', {required: true})
 
   // ignoreOwnCheckSuite should be true if repository and ref reference the same commit of the current check run
-  const ignoreOwnCheckSuite = repository === `${context.repo.owner}/${context.repo.repo}` && ref === context.sha
+  const ignoreOwnCheckSuite = owner === context.repo.owner && repo === context.repo.repo && ref === context.sha
 
   // Default the timeout to null
   const timeoutSecondsInput = core.getInput('timeoutSeconds')
@@ -44,8 +48,8 @@ export function getInput(): Inputs {
   appSlugFilter = appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null
 
   return {
-    owner: splitRepository[0],
-    repo: splitRepository[1],
+    owner,
+    repo,
     ref,
     token: core.getInput('token', {required: true}),
     waitForACheckSuite: parseBoolean(core.getInput('waitForACheckSuite', {required: true})),

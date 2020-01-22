@@ -169,7 +169,7 @@ async function checkTheCheckSuites(
     }
 
     // Log check suites for debugging purposes
-    core.debug(JSON.stringify(checkSuites, null, 2))
+    core.debug(JSON.stringify(checkSuites))
 
     // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further,
     //  for now skip one in_progress check suite status and one null check suite conclusion

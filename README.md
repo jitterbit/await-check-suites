@@ -2,7 +2,7 @@
   <a href="https://github.com/jitterbit/await-check-suites/actions"><img alt="jitterbit/await-check-suites status" src="https://github.com/jitterbit/await-check-suites/workflows/Test/badge.svg"></a>
 </p>
 
-# Await Check Suites Action
+# Await Check Suites
 
 Wait for a commit's check suites to complete.
 

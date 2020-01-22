@@ -75,14 +75,21 @@ jobs:
           path: race_condition_test
 
       - name: Make a commit to the race_condition_test branch
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
         run: |
-          cd race_condition_test
+          mkdir new_race_condition_test
+          cd new_race_condition_test
+          git init .
+          git checkout --orphan race_condition_test
+          mkdir -p .github/workflows
+          cp ../race_condition_test/.github/workflows/race_condition_test.yml .github/workflows/
           echo $(date +%s) > trigger_workflow.txt
-          git add trigger_workflow.txt
+          git add .
           git config --global user.name "GitHub Actions"
           git config --global user.email "build@jitterbit.com"
           git commit -m "test: trigger race_condition_test workflow"
-          git push --quiet --force origin race_condition_test
+          git push --quiet --force "https://$GITHUB_PAT@github.com/${GITHUB_REPOSITORY}.git" race_condition_test
 
       - name: Wait for the commit's check suite(s) to complete
         id: await

@@ -27,11 +27,6 @@ See [action.yml](action.yml)
     # Default: ${{ github.token }}
     token: ''
 
-    # If `repository` and `ref` reference the commit of the current check run (true by default),
-    # then ignore the check suite for this workflow.
-    # Default: true
-    ignoreOwnCheckSuite: ''
-
     # Wait for a check suite to be created if none exist.
     # This is important to protect against race conditions
     # if you know a check suite should exist on the `ref`'s commit.

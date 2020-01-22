@@ -1,10 +1,12 @@
 import * as core from '@actions/core'
-import {GitHub} from '@actions/github'
+import {context, GitHub} from '@actions/github'
 import {getInput} from './getInput'
 import {CheckSuiteConclusion, waitForCheckSuites} from './wait-for-check-suites'
 
 async function run(): Promise<void> {
   try {
+    core.debug(JSON.stringify(context))
+
     const {
       owner,
       repo,

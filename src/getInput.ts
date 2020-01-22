@@ -26,11 +26,8 @@ export function getInput(): Inputs {
   // Get the git commit's ref now so it's not pulled multiple times
   const ref = core.getInput('ref', {required: true})
 
-  // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
-  let ignoreOwnCheckSuite = parseBoolean(core.getInput('ignoreOwnCheckSuite', {required: true}))
-  if (repository !== `${context.repo.owner}/${context.repo.repo}` || ref !== context.sha) {
-    ignoreOwnCheckSuite = false
-  }
+  // ignoreOwnCheckSuite should be true if repository and ref reference the same commit of the current check run
+  const ignoreOwnCheckSuite = repository === `${context.repo.owner}/${context.repo.repo}` && ref === context.sha
 
   // Default the timeout to null
   const timeoutSecondsInput = core.getInput('timeoutSeconds')

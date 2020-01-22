@@ -144,11 +144,8 @@ function getInput() {
     }
     // Get the git commit's ref now so it's not pulled multiple times
     const ref = core.getInput('ref', { required: true });
-    // ignoreOwnCheckSuite should only be true if repository and ref reference the same commit of the current check run
-    let ignoreOwnCheckSuite = parseBoolean_1.parseBoolean(core.getInput('ignoreOwnCheckSuite', { required: true }));
-    if (repository !== `${github_1.context.repo.owner}/${github_1.context.repo.repo}` || ref !== github_1.context.sha) {
-        ignoreOwnCheckSuite = false;
-    }
+    // ignoreOwnCheckSuite should be true if repository and ref reference the same commit of the current check run
+    const ignoreOwnCheckSuite = repository === `${github_1.context.repo.owner}/${github_1.context.repo.repo}` && ref === github_1.context.sha;
     // Default the timeout to null
     const timeoutSecondsInput = core.getInput('timeoutSeconds');
     let timeoutSeconds = timeoutSecondsInput && timeoutSecondsInput.length > 0 ? parseInt(timeoutSecondsInput) : null;
@@ -1756,6 +1753,7 @@ const wait_for_check_suites_1 = __webpack_require__(987);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            core.debug(JSON.stringify(github_1.context));
             const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = getInput_1.getInput();
             const conclusion = yield wait_for_check_suites_1.waitForCheckSuites({
                 client: new github_1.GitHub(token),
@@ -11436,14 +11434,15 @@ function checkTheCheckSuites(options) {
 }
 function getCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
+        const { client, owner, repo, ref } = options;
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
-            const result = yield options.client.checks.listSuitesForRef({
-                owner: options.owner,
-                repo: options.repo,
-                ref: options.ref
+            const result = yield client.checks.listSuitesForRef({
+                owner,
+                repo,
+                ref
             });
             if (result.status !== 200) {
-                throw new Error(`Failed to list check suites for ${options.owner}/${options.repo}@${options.ref}. ` +
+                throw new Error(`Failed to list check suites for ${owner}/${repo}@${ref}. ` +
                     `Expected response code 200, got ${result.status}.`);
             }
             resolve(result.data);

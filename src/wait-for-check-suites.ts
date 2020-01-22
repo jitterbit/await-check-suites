@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {GitHub} from '@actions/github'
-import Octokit from '@octokit/rest'
+import Octokit from '@octokit/rest' // imported for types only
 
 /* eslint-disable @typescript-eslint/camelcase */
 // All possible Check Suite statuses in descending order of priority
@@ -194,15 +194,17 @@ async function checkTheCheckSuites(
 }
 
 async function getCheckSuites(options: GetCheckSuitesOptions): Promise<Octokit.ChecksListSuitesForRefResponse> {
+  const {client, owner, repo, ref} = options
+
   return new Promise(async resolve => {
-    const result = await options.client.checks.listSuitesForRef({
-      owner: options.owner,
-      repo: options.repo,
-      ref: options.ref
+    const result = await client.checks.listSuitesForRef({
+      owner,
+      repo,
+      ref
     })
     if (result.status !== 200) {
       throw new Error(
-        `Failed to list check suites for ${options.owner}/${options.repo}@${options.ref}. ` +
+        `Failed to list check suites for ${owner}/${repo}@${ref}. ` +
           `Expected response code 200, got ${result.status}.`
       )
     }

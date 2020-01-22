@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {context, GitHub} from '@actions/github'
-import {getInput} from './getInput'
+import {getInput} from './get-input'
 import {CheckSuiteConclusion, waitForCheckSuites} from './wait-for-check-suites'
 
 async function run(): Promise<void> {

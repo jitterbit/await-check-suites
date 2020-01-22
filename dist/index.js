@@ -119,60 +119,6 @@ module.exports = osName;
 
 /***/ }),
 
-/***/ 7:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(470));
-const github_1 = __webpack_require__(469);
-const parseBoolean_1 = __webpack_require__(905);
-function getInput() {
-    // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
-    const repository = core.getInput('repository', { required: true });
-    const splitRepository = repository.split('/');
-    if (splitRepository.length !== 2 || !splitRepository[0] || !splitRepository[1]) {
-        throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`);
-    }
-    // Get the git commit's ref now so it's not pulled multiple times
-    const ref = core.getInput('ref', { required: true });
-    // ignoreOwnCheckSuite should be true if repository and ref reference the same commit of the current check run
-    const ignoreOwnCheckSuite = repository === `${github_1.context.repo.owner}/${github_1.context.repo.repo}` && ref === github_1.context.sha;
-    // Default the timeout to null
-    const timeoutSecondsInput = core.getInput('timeoutSeconds');
-    let timeoutSeconds = timeoutSecondsInput && timeoutSecondsInput.length > 0 ? parseInt(timeoutSecondsInput) : null;
-    if (timeoutSeconds && timeoutSeconds <= 0) {
-        timeoutSeconds = null;
-    }
-    // Default the check suites filter to null
-    let appSlugFilter = core.getInput('appSlugFilter');
-    appSlugFilter = appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null;
-    return {
-        owner: splitRepository[0],
-        repo: splitRepository[1],
-        ref,
-        token: core.getInput('token', { required: true }),
-        waitForACheckSuite: parseBoolean_1.parseBoolean(core.getInput('waitForACheckSuite', { required: true })),
-        ignoreOwnCheckSuite,
-        intervalSeconds: parseInt(core.getInput('intervalSeconds', { required: true })),
-        timeoutSeconds,
-        failStepOnFailure: parseBoolean_1.parseBoolean(core.getInput('failStepOnFailure', { required: true })),
-        appSlugFilter
-    };
-}
-exports.getInput = getInput;
-
-
-/***/ }),
-
 /***/ 8:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -542,6 +488,60 @@ module.exports = windowsRelease;
 /***/ (function(module) {
 
 module.exports = require("os");
+
+/***/ }),
+
+/***/ 109:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(470));
+const github_1 = __webpack_require__(469);
+const parse_boolean_1 = __webpack_require__(146);
+function getInput() {
+    // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
+    const repository = core.getInput('repository', { required: true });
+    const splitRepository = repository.split('/');
+    if (splitRepository.length !== 2 || !splitRepository[0] || !splitRepository[1]) {
+        throw new Error(`Invalid repository '${repository}'. Expected format {owner}/{repo}.`);
+    }
+    // Get the git commit's ref now so it's not pulled multiple times
+    const ref = core.getInput('ref', { required: true });
+    // ignoreOwnCheckSuite should be true if repository and ref reference the same commit of the current check run
+    const ignoreOwnCheckSuite = repository === `${github_1.context.repo.owner}/${github_1.context.repo.repo}` && ref === github_1.context.sha;
+    // Default the timeout to null
+    const timeoutSecondsInput = core.getInput('timeoutSeconds');
+    let timeoutSeconds = timeoutSecondsInput && timeoutSecondsInput.length > 0 ? parseInt(timeoutSecondsInput) : null;
+    if (timeoutSeconds && timeoutSeconds <= 0) {
+        timeoutSeconds = null;
+    }
+    // Default the check suites filter to null
+    let appSlugFilter = core.getInput('appSlugFilter');
+    appSlugFilter = appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null;
+    return {
+        owner: splitRepository[0],
+        repo: splitRepository[1],
+        ref,
+        token: core.getInput('token', { required: true }),
+        waitForACheckSuite: parse_boolean_1.parseBoolean(core.getInput('waitForACheckSuite', { required: true })),
+        ignoreOwnCheckSuite,
+        intervalSeconds: parseInt(core.getInput('intervalSeconds', { required: true })),
+        timeoutSeconds,
+        failStepOnFailure: parse_boolean_1.parseBoolean(core.getInput('failStepOnFailure', { required: true })),
+        appSlugFilter
+    };
+}
+exports.getInput = getInput;
+
 
 /***/ }),
 
@@ -1583,6 +1583,20 @@ module.exports.MaxBufferError = MaxBufferError;
 
 /***/ }),
 
+/***/ 146:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function parseBoolean(value) {
+    return value.toLowerCase() === 'true';
+}
+exports.parseBoolean = parseBoolean;
+
+
+/***/ }),
+
 /***/ 148:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -1748,13 +1762,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const github_1 = __webpack_require__(469);
-const getInput_1 = __webpack_require__(7);
+const get_input_1 = __webpack_require__(109);
 const wait_for_check_suites_1 = __webpack_require__(987);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             core.debug(JSON.stringify(github_1.context));
-            const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = getInput_1.getInput();
+            const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = get_input_1.getInput();
             const conclusion = yield wait_for_check_suites_1.waitForCheckSuites({
                 client: new github_1.GitHub(token),
                 owner,
@@ -10712,20 +10726,6 @@ function patchForDeprecation(octokit, apiOptions, method, methodName) {
 
   return patchedMethod;
 }
-
-
-/***/ }),
-
-/***/ 905:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function parseBoolean(value) {
-    return value.toLowerCase() === 'true';
-}
-exports.parseBoolean = parseBoolean;
 
 
 /***/ }),

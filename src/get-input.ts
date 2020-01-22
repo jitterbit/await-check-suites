@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {context} from '@actions/github'
-import {parseBoolean} from './parseBoolean'
+import {parseBoolean} from './parse-boolean'
 
 interface Inputs {
   owner: string

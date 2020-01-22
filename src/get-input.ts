@@ -16,6 +16,8 @@ interface Inputs {
 }
 
 export function getInput(): Inputs {
+  core.debug(JSON.stringify({ref: context.ref, sha: context.sha}))
+
   // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
   const repository = core.getInput('repository', {required: true})
   const splitRepository = repository.split('/')

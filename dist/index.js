@@ -508,6 +508,7 @@ const core = __importStar(__webpack_require__(470));
 const github_1 = __webpack_require__(469);
 const parse_boolean_1 = __webpack_require__(146);
 function getInput() {
+    core.debug(JSON.stringify({ ref: github_1.context.ref, sha: github_1.context.sha }));
     // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
     const repository = core.getInput('repository', { required: true });
     const splitRepository = repository.split('/');
@@ -1767,7 +1768,6 @@ const wait_for_check_suites_1 = __webpack_require__(987);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.debug(JSON.stringify(github_1.context));
             const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = get_input_1.getInput();
             const conclusion = yield wait_for_check_suites_1.waitForCheckSuites({
                 client: new github_1.GitHub(token),

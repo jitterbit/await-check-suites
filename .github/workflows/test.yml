@@ -35,6 +35,19 @@ jobs:
         with:
           appSlugFilter: github-actions
 
+  commit_sha_test:
+    name: Commit SHA test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run the action
+        uses: ./
+        with:
+          ref: cc8f5e113db0da7288e116d55cf10195407fd78f
+          appSlugFilter: github-actions
+
   race_condition_test:
     name: Race condition test
     runs-on: ubuntu-latest

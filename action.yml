@@ -41,7 +41,7 @@ inputs:
     description: >
       Number of seconds to wait before timing out.
     required: false
-  failStepOnFailure:
+  failStepIfUnsuccessful:
     description: >
       Fail step if any of the check suites complete with a conclusion other than 'success'.
     required: true

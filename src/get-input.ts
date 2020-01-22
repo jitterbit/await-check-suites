@@ -11,7 +11,7 @@ interface Inputs {
   waitForACheckSuite: boolean
   intervalSeconds: number
   timeoutSeconds: number | null
-  failStepOnFailure: boolean
+  failStepIfUnsuccessful: boolean
   appSlugFilter: string | null
 }
 
@@ -56,7 +56,7 @@ export function getInput(): Inputs {
     ignoreOwnCheckSuite,
     intervalSeconds: parseInt(core.getInput('intervalSeconds', {required: true})),
     timeoutSeconds,
-    failStepOnFailure: parseBoolean(core.getInput('failStepOnFailure', {required: true})),
+    failStepIfUnsuccessful: parseBoolean(core.getInput('failStepIfUnsuccessful', {required: true})),
     appSlugFilter
   }
 }

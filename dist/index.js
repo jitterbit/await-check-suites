@@ -539,7 +539,7 @@ function getInput() {
         ignoreOwnCheckSuite,
         intervalSeconds: parseInt(core.getInput('intervalSeconds', { required: true })),
         timeoutSeconds,
-        failStepOnFailure: parse_boolean_1.parseBoolean(core.getInput('failStepOnFailure', { required: true })),
+        failStepIfUnsuccessful: parse_boolean_1.parseBoolean(core.getInput('failStepIfUnsuccessful', { required: true })),
         appSlugFilter
     };
 }
@@ -1825,7 +1825,7 @@ const wait_for_check_suites_1 = __webpack_require__(987);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepOnFailure, appSlugFilter } = get_input_1.getInput();
+            const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepIfUnsuccessful, appSlugFilter } = get_input_1.getInput();
             const conclusion = yield wait_for_check_suites_1.waitForCheckSuites({
                 client: new github_1.GitHub(token),
                 owner,
@@ -1839,7 +1839,7 @@ function run() {
             });
             core.info(`Conclusion: ${conclusion}`);
             core.setOutput('conclusion', conclusion);
-            if (conclusion !== wait_for_check_suites_1.CheckSuiteConclusion.success && failStepOnFailure) {
+            if (conclusion !== wait_for_check_suites_1.CheckSuiteConclusion.success && failStepIfUnsuccessful) {
                 core.setFailed('One or more of the check suites were unsuccessful.');
             }
         }

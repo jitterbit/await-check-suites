@@ -14,7 +14,7 @@ async function run(): Promise<void> {
       waitForACheckSuite,
       intervalSeconds,
       timeoutSeconds,
-      failStepOnFailure,
+      failStepIfUnsuccessful,
       appSlugFilter
     } = getInput()
 
@@ -34,7 +34,7 @@ async function run(): Promise<void> {
 
     core.setOutput('conclusion', conclusion)
 
-    if (conclusion !== CheckSuiteConclusion.success && failStepOnFailure) {
+    if (conclusion !== CheckSuiteConclusion.success && failStepIfUnsuccessful) {
       core.setFailed('One or more of the check suites were unsuccessful.')
     }
   } catch (error) {

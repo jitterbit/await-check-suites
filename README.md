@@ -42,7 +42,7 @@ See [action.yml](action.yml)
 
     # Fail step if any of the check suites complete with a conclusion other than 'success'.
     # Default: true
-    failStepOnFailure: ''
+    failStepIfUnsuccessful: ''
 
     # Filter check suites for a particular app's slug (e.g., 'github-actions').
     appSlugFilter: ''

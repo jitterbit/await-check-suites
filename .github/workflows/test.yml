@@ -95,9 +95,9 @@ jobs:
         run: |
           yarn
 
-      - name: Clear dist/
+      - name: Clear dist/ and lib/
         run: |
-          rm -rf dist/*
+          rm -rf dist/* lib/*
 
       - name: Build, format, lint, package, and test
         run: |

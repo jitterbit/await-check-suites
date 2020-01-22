@@ -30,12 +30,13 @@
   },
   "scripts": {
     "build": "tsc",
+    "clean": "rimraf dist/**/* lib/**/*",
     "format": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build",
     "test": "jest",
-    "all": "yarn build && yarn format && yarn lint && yarn package && yarn test"
+    "all": "yarn clean && yarn build && yarn format && yarn lint && yarn package && yarn test"
   },
   "dependencies": {
     "@actions/core": "^1.2.0",
@@ -54,6 +55,7 @@
     "jest-circus": "^24.9.0",
     "js-yaml": "^3.13.1",
     "prettier": "^1.19.1",
+    "rimraf": "^3.0.0",
     "ts-jest": "^24.2.0",
     "typescript": "^3.6.4"
   }

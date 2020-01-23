@@ -46,12 +46,19 @@ See [action.yml](action.yml)
 
     # Filter check suites for a particular app's slug (e.g., 'github-actions').
     appSlugFilter: ''
+
+    # Only take into account the first check suite ordered by the `created_at` timestamp.
+    # If `appSlugFilter` is set, only the first check suite that matches the app's slug is taken into account.
+    # This is important for scheduled workflows that only want to take into account pushed workflows.
+    # Default: false
+    onlyFirstCheckSuite: ''
 ```
 
 # Scenarios
 
 - [Wait for other check suites on this commit to complete](#Wait-for-other-check-suites-on-this-commit-to-complete)
 - [Wait for all check suites on a commit in another repo to complete](#Wait-for-all-check-suites-on-a-commit-in-another-repo-to-complete)
+- [Wait for the first GitHub Actions check suite on this commit to complete](#Wait-for-the-first-GitHub-Actions-check-suite-on-this-commit-to-complete)
 
 ## Wait for other check suites on this commit to complete
 
@@ -67,6 +74,15 @@ See [action.yml](action.yml)
     repository: jitterbit/git-ops
     ref: ${{ env.git_ops_commit_sha }}
     token: ${{ secrets.GITHUB_PAT }}
+```
+
+## Wait for the first GitHub Actions check suite on this commit to complete
+
+```yaml
+- uses: jitterbit/await-check-suites@v1
+  with:
+    appSlugFilter: github-actions
+    onlyFirstCheckSuite: true
 ```
 
 # Install, Build, Lint, Test, and Package

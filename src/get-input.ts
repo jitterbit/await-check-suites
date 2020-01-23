@@ -13,6 +13,7 @@ interface Inputs {
   timeoutSeconds: number | null
   failStepIfUnsuccessful: boolean
   appSlugFilter: string | null
+  onlyFirstCheckSuite: boolean
 }
 
 export function getInput(): Inputs {
@@ -57,6 +58,7 @@ export function getInput(): Inputs {
     intervalSeconds: parseInt(core.getInput('intervalSeconds', {required: true})),
     timeoutSeconds,
     failStepIfUnsuccessful: parseBoolean(core.getInput('failStepIfUnsuccessful', {required: true})),
-    appSlugFilter
+    appSlugFilter,
+    onlyFirstCheckSuite: parseBoolean(core.getInput('onlyFirstCheckSuite', {required: true}))
   }
 }

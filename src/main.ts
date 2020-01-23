@@ -15,7 +15,8 @@ async function run(): Promise<void> {
       intervalSeconds,
       timeoutSeconds,
       failStepIfUnsuccessful,
-      appSlugFilter
+      appSlugFilter,
+      onlyFirstCheckSuite
     } = getInput()
 
     const conclusion = await waitForCheckSuites({
@@ -27,7 +28,8 @@ async function run(): Promise<void> {
       waitForACheckSuite,
       intervalSeconds,
       timeoutSeconds,
-      appSlugFilter
+      appSlugFilter,
+      onlyFirstCheckSuite
     })
 
     core.info(`Conclusion: ${conclusion}`)

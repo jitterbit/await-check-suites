@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import {GitHub} from '@actions/github'
 import Octokit from '@octokit/rest' // imported for types only
 
+// Define these enums to workaround https://github.com/octokit/plugin-rest-endpoint-methods.js/issues/9
 /* eslint-disable @typescript-eslint/camelcase */
 // All possible Check Suite statuses in descending order of priority
 enum CheckSuiteStatus {
@@ -30,6 +31,7 @@ interface WaitForCheckSuitesOptions {
   intervalSeconds: number
   timeoutSeconds: number | null
   appSlugFilter: string | null
+  onlyFirstCheckSuite: boolean
 }
 interface CheckTheCheckSuitesOptions {
   client: GitHub
@@ -39,6 +41,7 @@ interface CheckTheCheckSuitesOptions {
   ignoreOwnCheckSuite: boolean
   waitForACheckSuite: boolean
   appSlugFilter: string | null
+  onlyFirstCheckSuite: boolean
 }
 interface GetCheckSuitesOptions {
   client: GitHub
@@ -65,7 +68,8 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
     waitForACheckSuite,
     intervalSeconds,
     timeoutSeconds,
-    appSlugFilter
+    appSlugFilter,
+    onlyFirstCheckSuite
   } = options
 
   return new Promise(async resolve => {
@@ -77,7 +81,8 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
       ref,
       ignoreOwnCheckSuite,
       waitForACheckSuite,
-      appSlugFilter
+      appSlugFilter,
+      onlyFirstCheckSuite
     })
     if (result === CheckSuiteConclusion.success) {
       resolve(CheckSuiteConclusion.success)
@@ -99,7 +104,8 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
         ref,
         ignoreOwnCheckSuite,
         waitForACheckSuite,
-        appSlugFilter
+        appSlugFilter,
+        onlyFirstCheckSuite
       })
       if (result === CheckSuiteConclusion.success) {
         if (timeoutId) {
@@ -131,7 +137,16 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
 async function checkTheCheckSuites(
   options: CheckTheCheckSuitesOptions
 ): Promise<Exclude<CheckSuiteStatus, CheckSuiteStatus.completed> | CheckSuiteConclusion> {
-  const {client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, appSlugFilter} = options
+  const {
+    client,
+    owner,
+    repo,
+    ref,
+    ignoreOwnCheckSuite,
+    waitForACheckSuite,
+    appSlugFilter,
+    onlyFirstCheckSuite
+  } = options
 
   return new Promise(async resolve => {
     const checkSuitesAndMeta = await getCheckSuites({
@@ -151,7 +166,7 @@ async function checkTheCheckSuites(
         return
       }
     }
-    const checkSuites = appSlugFilter
+    let checkSuites = appSlugFilter
       ? checkSuitesAndMeta.check_suites.filter(checkSuite => checkSuite.app.slug === appSlugFilter)
       : checkSuitesAndMeta.check_suites
     if (checkSuites.length === 0) {
@@ -168,11 +183,30 @@ async function checkTheCheckSuites(
       }
     }
 
-    // Log check suites for debugging purposes
-    core.debug(JSON.stringify(checkSuites))
+    // Only take into account the first Check Suite created that matches the `appSlugFilter`
+    if (onlyFirstCheckSuite) {
+      // Get the first Check Suite created by reducing the array based on the created_at timestamp
+      const firstCheckSuite = checkSuites.reduce((previous, current) => {
+        // Cast to any to workaround https://github.com/octokit/plugin-rest-endpoint-methods.js/issues/8
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        const previousDateString = (previous as any)['created_at'],
+          currentDateString = (current as any)['created_at']
+        /* eslint-enable @typescript-eslint/no-explicit-any */
+        if (typeof previousDateString !== 'string' || typeof currentDateString !== 'string') {
+          throw new Error(
+            `Expected ChecksListSuitesForRefResponseCheckSuitesItem to have the property 'created_at' with type 'string' but got '${
+              typeof previousDateString === typeof currentDateString
+                ? typeof previousDateString
+                : `${typeof previousDateString} and ${typeof currentDateString}`
+            }'. Please submit an issue on this action's GitHub repo.`
+          )
+        }
+        return Date.parse(previousDateString) < Date.parse(currentDateString) ? previous : current
+      })
 
-    // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further,
-    //  for now skip one in_progress check suite status and one null check suite conclusion
+      // Set the array of Check Suites to an array of one containing the first Check Suite created
+      checkSuites = [firstCheckSuite]
+    }
 
     const highestPriorityCheckSuiteStatus = getHighestPriorityCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite)
     if (highestPriorityCheckSuiteStatus === CheckSuiteStatus.completed) {

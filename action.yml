@@ -50,6 +50,13 @@ inputs:
     description: >
       Filter check suites for a particular app's slug (e.g., 'github-actions').
     required: false
+  onlyFirstCheckSuite:
+    description: >
+      Only take into account the first check suite ordered by the `created_at` timestamp.
+      If `appSlugFilter` is set, only the first check suite that matches the app's slug is taken into account.
+      This is important for scheduled workflows that only want to take into account pushed workflows.
+    required: true
+    default: 'false'
 
 outputs:
   conclusion:

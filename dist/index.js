@@ -540,7 +540,8 @@ function getInput() {
         intervalSeconds: parseInt(core.getInput('intervalSeconds', { required: true })),
         timeoutSeconds,
         failStepIfUnsuccessful: parse_boolean_1.parseBoolean(core.getInput('failStepIfUnsuccessful', { required: true })),
-        appSlugFilter
+        appSlugFilter,
+        onlyFirstCheckSuite: parse_boolean_1.parseBoolean(core.getInput('onlyFirstCheckSuite', { required: true }))
     };
 }
 exports.getInput = getInput;
@@ -1825,7 +1826,7 @@ const wait_for_check_suites_1 = __webpack_require__(987);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepIfUnsuccessful, appSlugFilter } = get_input_1.getInput();
+            const { owner, repo, ref, token, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, failStepIfUnsuccessful, appSlugFilter, onlyFirstCheckSuite } = get_input_1.getInput();
             const conclusion = yield wait_for_check_suites_1.waitForCheckSuites({
                 client: new github_1.GitHub(token),
                 owner,
@@ -1835,7 +1836,8 @@ function run() {
                 waitForACheckSuite,
                 intervalSeconds,
                 timeoutSeconds,
-                appSlugFilter
+                appSlugFilter,
+                onlyFirstCheckSuite
             });
             core.info(`Conclusion: ${conclusion}`);
             core.setOutput('conclusion', conclusion);
@@ -1863,7 +1865,7 @@ module.exports = require("https");
 /***/ 215:
 /***/ (function(module) {
 
-module.exports = {"name":"@octokit/rest","version":"16.38.0","publishConfig":{"access":"public"},"description":"GitHub REST API client for Node.js","keywords":["octokit","github","rest","api-client"],"author":"Gregor Martynus (https://github.com/gr2m)","contributors":[{"name":"Mike de Boer","email":"info@mikedeboer.nl"},{"name":"Fabian Jakobs","email":"fabian@c9.io"},{"name":"Joe Gallo","email":"joe@brassafrax.com"},{"name":"Gregor Martynus","url":"https://github.com/gr2m"}],"repository":"https://github.com/octokit/rest.js","dependencies":{"@octokit/auth-token":"^2.4.0","@octokit/request":"^5.2.0","@octokit/request-error":"^1.0.2","atob-lite":"^2.0.0","before-after-hook":"^2.0.0","btoa-lite":"^1.0.0","deprecation":"^2.0.0","lodash.get":"^4.4.2","lodash.set":"^4.3.2","lodash.uniq":"^4.5.0","octokit-pagination-methods":"^1.1.0","once":"^1.4.0","universal-user-agent":"^4.0.0"},"devDependencies":{"@gimenete/type-writer":"^0.1.3","@octokit/auth":"^1.1.1","@octokit/fixtures-server":"^5.0.6","@octokit/graphql":"^4.2.0","@types/node":"^13.1.0","bundlesize":"^0.18.0","chai":"^4.1.2","compression-webpack-plugin":"^3.1.0","cypress":"^3.0.0","glob":"^7.1.2","http-proxy-agent":"^3.0.0","lodash.camelcase":"^4.3.0","lodash.merge":"^4.6.1","lodash.upperfirst":"^4.3.1","mkdirp":"^0.5.1","mocha":"^6.0.0","mustache":"^4.0.0","nock":"^11.3.3","npm-run-all":"^4.1.2","nyc":"^15.0.0","prettier":"^1.14.2","proxy":"^1.0.0","semantic-release":"^16.0.0","sinon":"^8.0.0","sinon-chai":"^3.0.0","sort-keys":"^4.0.0","string-to-arraybuffer":"^1.0.0","string-to-jsdoc-comment":"^1.0.0","typescript":"^3.3.1","webpack":"^4.0.0","webpack-bundle-analyzer":"^3.0.0","webpack-cli":"^3.0.0"},"types":"index.d.ts","scripts":{"coverage":"nyc report --reporter=html && open coverage/index.html","lint":"prettier --check '{lib,plugins,scripts,test}/**/*.{js,json,ts}' 'docs/*.{js,json}' 'docs/src/**/*' index.js README.md package.json","lint:fix":"prettier --write '{lib,plugins,scripts,test}/**/*.{js,json,ts}' 'docs/*.{js,json}' 'docs/src/**/*' index.js README.md package.json","pretest":"npm run -s lint","test":"nyc mocha test/mocha-node-setup.js \"test/*/**/*-test.js\"","test:browser":"cypress run --browser chrome","build":"npm-run-all build:*","build:ts":"npm run -s update-endpoints:typescript","prebuild:browser":"mkdirp dist/","build:browser":"npm-run-all build:browser:*","build:browser:development":"webpack --mode development --entry . --output-library=Octokit --output=./dist/octokit-rest.js --profile --json > dist/bundle-stats.json","build:browser:production":"webpack --mode production --entry . --plugin=compression-webpack-plugin --output-library=Octokit --output-path=./dist --output-filename=octokit-rest.min.js --devtool source-map","generate-bundle-report":"webpack-bundle-analyzer dist/bundle-stats.json --mode=static --no-open --report dist/bundle-report.html","update-endpoints":"npm-run-all update-endpoints:*","update-endpoints:fetch-json":"node scripts/update-endpoints/fetch-json","update-endpoints:code":"node scripts/update-endpoints/code","update-endpoints:typescript":"node scripts/update-endpoints/typescript","prevalidate:ts":"npm run -s build:ts","validate:ts":"tsc --target es6 --noImplicitAny index.d.ts","postvalidate:ts":"tsc --noEmit --target es6 test/typescript-validate.ts","start-fixtures-server":"octokit-fixtures-server"},"license":"MIT","files":["index.js","index.d.ts","lib","plugins"],"nyc":{"ignore":["test"]},"release":{"publish":["@semantic-release/npm",{"path":"@semantic-release/github","assets":["dist/*","!dist/*.map.gz"]}]},"bundlesize":[{"path":"./dist/octokit-rest.min.js.gz","maxSize":"33 kB"}]};
+module.exports = {"name":"@octokit/rest","version":"16.38.1","publishConfig":{"access":"public"},"description":"GitHub REST API client for Node.js","keywords":["octokit","github","rest","api-client"],"author":"Gregor Martynus (https://github.com/gr2m)","contributors":[{"name":"Mike de Boer","email":"info@mikedeboer.nl"},{"name":"Fabian Jakobs","email":"fabian@c9.io"},{"name":"Joe Gallo","email":"joe@brassafrax.com"},{"name":"Gregor Martynus","url":"https://github.com/gr2m"}],"repository":"https://github.com/octokit/rest.js","dependencies":{"@octokit/auth-token":"^2.4.0","@octokit/request":"^5.2.0","@octokit/request-error":"^1.0.2","atob-lite":"^2.0.0","before-after-hook":"^2.0.0","btoa-lite":"^1.0.0","deprecation":"^2.0.0","lodash.get":"^4.4.2","lodash.set":"^4.3.2","lodash.uniq":"^4.5.0","octokit-pagination-methods":"^1.1.0","once":"^1.4.0","universal-user-agent":"^4.0.0"},"devDependencies":{"@gimenete/type-writer":"^0.1.3","@octokit/auth":"^1.1.1","@octokit/fixtures-server":"^5.0.6","@octokit/graphql":"^4.2.0","@types/node":"^13.1.0","bundlesize":"^0.18.0","chai":"^4.1.2","compression-webpack-plugin":"^3.1.0","cypress":"^3.0.0","glob":"^7.1.2","http-proxy-agent":"^3.0.0","lodash.camelcase":"^4.3.0","lodash.merge":"^4.6.1","lodash.upperfirst":"^4.3.1","mkdirp":"^0.5.1","mocha":"^6.0.0","mustache":"^4.0.0","nock":"^11.3.3","npm-run-all":"^4.1.2","nyc":"^15.0.0","prettier":"^1.14.2","proxy":"^1.0.0","semantic-release":"^16.0.0","sinon":"^8.0.0","sinon-chai":"^3.0.0","sort-keys":"^4.0.0","string-to-arraybuffer":"^1.0.0","string-to-jsdoc-comment":"^1.0.0","typescript":"^3.3.1","webpack":"^4.0.0","webpack-bundle-analyzer":"^3.0.0","webpack-cli":"^3.0.0"},"types":"index.d.ts","scripts":{"coverage":"nyc report --reporter=html && open coverage/index.html","lint":"prettier --check '{lib,plugins,scripts,test}/**/*.{js,json,ts}' 'docs/*.{js,json}' 'docs/src/**/*' index.js README.md package.json","lint:fix":"prettier --write '{lib,plugins,scripts,test}/**/*.{js,json,ts}' 'docs/*.{js,json}' 'docs/src/**/*' index.js README.md package.json","pretest":"npm run -s lint","test":"nyc mocha test/mocha-node-setup.js \"test/*/**/*-test.js\"","test:browser":"cypress run --browser chrome","build":"npm-run-all build:*","build:ts":"npm run -s update-endpoints:typescript","prebuild:browser":"mkdirp dist/","build:browser":"npm-run-all build:browser:*","build:browser:development":"webpack --mode development --entry . --output-library=Octokit --output=./dist/octokit-rest.js --profile --json > dist/bundle-stats.json","build:browser:production":"webpack --mode production --entry . --plugin=compression-webpack-plugin --output-library=Octokit --output-path=./dist --output-filename=octokit-rest.min.js --devtool source-map","generate-bundle-report":"webpack-bundle-analyzer dist/bundle-stats.json --mode=static --no-open --report dist/bundle-report.html","update-endpoints":"npm-run-all update-endpoints:*","update-endpoints:fetch-json":"node scripts/update-endpoints/fetch-json","update-endpoints:code":"node scripts/update-endpoints/code","update-endpoints:typescript":"node scripts/update-endpoints/typescript","prevalidate:ts":"npm run -s build:ts","validate:ts":"tsc --target es6 --noImplicitAny index.d.ts","postvalidate:ts":"tsc --noEmit --target es6 test/typescript-validate.ts","start-fixtures-server":"octokit-fixtures-server"},"license":"MIT","files":["index.js","index.d.ts","lib","plugins"],"nyc":{"ignore":["test"]},"release":{"publish":["@semantic-release/npm",{"path":"@semantic-release/github","assets":["dist/*","!dist/*.map.gz"]}]},"bundlesize":[{"path":"./dist/octokit-rest.min.js.gz","maxSize":"33 kB"}]};
 
 /***/ }),
 
@@ -11395,6 +11397,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
+// Define these enums to workaround https://github.com/octokit/plugin-rest-endpoint-methods.js/issues/9
 /* eslint-disable @typescript-eslint/camelcase */
 // All possible Check Suite statuses in descending order of priority
 var CheckSuiteStatus;
@@ -11415,7 +11418,7 @@ var CheckSuiteConclusion;
 })(CheckSuiteConclusion = exports.CheckSuiteConclusion || (exports.CheckSuiteConclusion = {}));
 function waitForCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, appSlugFilter } = options;
+        const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, intervalSeconds, timeoutSeconds, appSlugFilter, onlyFirstCheckSuite } = options;
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             // Check to see if all of the check suites have already completed
             let result = yield checkTheCheckSuites({
@@ -11425,7 +11428,8 @@ function waitForCheckSuites(options) {
                 ref,
                 ignoreOwnCheckSuite,
                 waitForACheckSuite,
-                appSlugFilter
+                appSlugFilter,
+                onlyFirstCheckSuite
             });
             if (result === CheckSuiteConclusion.success) {
                 resolve(CheckSuiteConclusion.success);
@@ -11446,7 +11450,8 @@ function waitForCheckSuites(options) {
                     ref,
                     ignoreOwnCheckSuite,
                     waitForACheckSuite,
-                    appSlugFilter
+                    appSlugFilter,
+                    onlyFirstCheckSuite
                 });
                 if (result === CheckSuiteConclusion.success) {
                     if (timeoutId) {
@@ -11478,7 +11483,7 @@ function waitForCheckSuites(options) {
 exports.waitForCheckSuites = waitForCheckSuites;
 function checkTheCheckSuites(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, appSlugFilter } = options;
+        const { client, owner, repo, ref, ignoreOwnCheckSuite, waitForACheckSuite, appSlugFilter, onlyFirstCheckSuite } = options;
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             const checkSuitesAndMeta = yield getCheckSuites({
                 client,
@@ -11497,7 +11502,7 @@ function checkTheCheckSuites(options) {
                     return;
                 }
             }
-            const checkSuites = appSlugFilter
+            let checkSuites = appSlugFilter
                 ? checkSuitesAndMeta.check_suites.filter(checkSuite => checkSuite.app.slug === appSlugFilter)
                 : checkSuitesAndMeta.check_suites;
             if (checkSuites.length === 0) {
@@ -11512,10 +11517,24 @@ function checkTheCheckSuites(options) {
                     return;
                 }
             }
-            // Log check suites for debugging purposes
-            core.debug(JSON.stringify(checkSuites));
-            // TODO: Use ignoreOwnCheckSuite here to filter checkSuites further,
-            //  for now skip one in_progress check suite status and one null check suite conclusion
+            // Only take into account the first Check Suite created that matches the `appSlugFilter`
+            if (onlyFirstCheckSuite) {
+                // Get the first Check Suite created by reducing the array based on the created_at timestamp
+                const firstCheckSuite = checkSuites.reduce((previous, current) => {
+                    // Cast to any to workaround https://github.com/octokit/plugin-rest-endpoint-methods.js/issues/8
+                    /* eslint-disable @typescript-eslint/no-explicit-any */
+                    const previousDateString = previous['created_at'], currentDateString = current['created_at'];
+                    /* eslint-enable @typescript-eslint/no-explicit-any */
+                    if (typeof previousDateString !== 'string' || typeof currentDateString !== 'string') {
+                        throw new Error(`Expected ChecksListSuitesForRefResponseCheckSuitesItem to have the property 'created_at' with type 'string' but got '${typeof previousDateString === typeof currentDateString
+                            ? typeof previousDateString
+                            : `${typeof previousDateString} and ${typeof currentDateString}`}'. Please submit an issue on this action's GitHub repo.`);
+                    }
+                    return Date.parse(previousDateString) < Date.parse(currentDateString) ? previous : current;
+                });
+                // Set the array of Check Suites to an array of one containing the first Check Suite created
+                checkSuites = [firstCheckSuite];
+            }
             const highestPriorityCheckSuiteStatus = getHighestPriorityCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite);
             if (highestPriorityCheckSuiteStatus === CheckSuiteStatus.completed) {
                 const highestPriorityCheckSuiteConclusion = getHighestPriorityCheckSuiteConclusion(checkSuites, ignoreOwnCheckSuite);

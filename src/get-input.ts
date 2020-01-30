@@ -1,13 +1,13 @@
 import * as core from '@actions/core'
-import {context} from '@actions/github'
+import {context, GitHub} from '@actions/github'
 import {parseBoolean} from './parse-boolean'
 
 interface Inputs {
+  client: GitHub
   owner: string
   repo: string
   ref: string
-  token: string
-  ignoreOwnCheckSuite: boolean
+  checkSuiteID: number | null
   waitForACheckSuite: boolean
   intervalSeconds: number
   timeoutSeconds: number | null
@@ -16,10 +16,13 @@ interface Inputs {
   onlyFirstCheckSuite: boolean
 }
 
-export function getInput(): Inputs {
+export async function getInput(): Promise<Inputs> {
   core.debug(
     JSON.stringify({repository: `${context.repo.owner}/${context.repo.repo}`, ref: context.ref, sha: context.sha})
   )
+
+  // Create GitHub client
+  const client = new GitHub(core.getInput('token', {required: true}))
 
   // Convert the repository input (`${owner}/${repo}`) into two inputs, owner and repo
   const repository = core.getInput('repository', {required: true})
@@ -33,8 +36,35 @@ export function getInput(): Inputs {
   // Get the git commit's ref now so it's not pulled multiple times
   const ref = core.getInput('ref', {required: true})
 
-  // ignoreOwnCheckSuite should be true if repository and ref reference the same commit of the current check run
-  const ignoreOwnCheckSuite = owner === context.repo.owner && repo === context.repo.repo && ref === context.sha
+  // checkSuiteID is the ID of this Check Run's Check Suite
+  // if repository is different from this Check Run's repository, then checkSuiteID is null
+  if (!process.env.GITHUB_RUN_ID) {
+    throw new Error(
+      `Expected the environment variable $GITHUB_RUN_ID to be set to a truthy value, but it isn't (${
+        process.env.GITHUB_RUN_ID
+      } as ${typeof process.env.GITHUB_RUN_ID}). Please submit an issue on this action's GitHub repo.`
+    )
+  }
+  /* eslint-disable @typescript-eslint/camelcase */
+  let checkSuiteID: number | null = null
+  if (owner === context.repo.owner && repo === context.repo.repo) {
+    const workflowRunID = parseInt(process.env.GITHUB_RUN_ID)
+    const response = await client.actions.getWorkflowRun({owner, repo, run_id: workflowRunID})
+    if (response.status !== 200) {
+      throw new Error(
+        `Failed to get workflow run from ${owner}/${repo} with workflow run ID ${workflowRunID}. ` +
+          `Expected response code 200, got ${response.status}.`
+      )
+    }
+    checkSuiteID = response.data.check_suite_id
+  }
+  /* eslint-enable @typescript-eslint/camelcase */
+  if (checkSuiteID !== null && isNaN(checkSuiteID)) {
+    throw new Error(
+      `Expected the environment variable $GITHUB_RUN_ID to be a number but it isn't (${checkSuiteID} as ${typeof checkSuiteID}). ` +
+        "Please submit an issue on this action's GitHub repo."
+    )
+  }
 
   // Default the timeout to null
   const timeoutSecondsInput = core.getInput('timeoutSeconds')
@@ -49,12 +79,12 @@ export function getInput(): Inputs {
   appSlugFilter = appSlugFilter && appSlugFilter.length > 0 ? appSlugFilter : null
 
   return {
+    client,
     owner,
     repo,
     ref,
-    token: core.getInput('token', {required: true}),
     waitForACheckSuite: parseBoolean(core.getInput('waitForACheckSuite', {required: true})),
-    ignoreOwnCheckSuite,
+    checkSuiteID,
     intervalSeconds: parseInt(core.getInput('intervalSeconds', {required: true})),
     timeoutSeconds,
     failStepIfUnsuccessful: parseBoolean(core.getInput('failStepIfUnsuccessful', {required: true})),

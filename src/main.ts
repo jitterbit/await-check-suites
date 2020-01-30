@@ -1,30 +1,29 @@
 import * as core from '@actions/core'
-import {GitHub} from '@actions/github'
 import {getInput} from './get-input'
 import {CheckSuiteConclusion, waitForCheckSuites} from './wait-for-check-suites'
 
 async function run(): Promise<void> {
   try {
     const {
+      client,
       owner,
       repo,
       ref,
-      token,
-      ignoreOwnCheckSuite,
+      checkSuiteID,
       waitForACheckSuite,
       intervalSeconds,
       timeoutSeconds,
       failStepIfUnsuccessful,
       appSlugFilter,
       onlyFirstCheckSuite
-    } = getInput()
+    } = await getInput()
 
     const conclusion = await waitForCheckSuites({
-      client: new GitHub(token),
+      client,
       owner,
       repo,
       ref,
-      ignoreOwnCheckSuite,
+      checkSuiteID,
       waitForACheckSuite,
       intervalSeconds,
       timeoutSeconds,

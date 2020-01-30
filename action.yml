@@ -57,7 +57,6 @@ inputs:
       This is important for scheduled workflows that only want to take into account pushed workflows.
     required: true
     default: 'false'
-
 outputs:
   conclusion:
     description: >

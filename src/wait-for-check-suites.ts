@@ -26,7 +26,7 @@ interface WaitForCheckSuitesOptions {
   owner: string
   repo: string
   ref: string
-  ignoreOwnCheckSuite: boolean
+  checkSuiteID: number | null
   waitForACheckSuite: boolean
   intervalSeconds: number
   timeoutSeconds: number | null
@@ -38,7 +38,7 @@ interface CheckTheCheckSuitesOptions {
   owner: string
   repo: string
   ref: string
-  ignoreOwnCheckSuite: boolean
+  checkSuiteID: number | null
   waitForACheckSuite: boolean
   appSlugFilter: string | null
   onlyFirstCheckSuite: boolean
@@ -64,7 +64,7 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
     owner,
     repo,
     ref,
-    ignoreOwnCheckSuite,
+    checkSuiteID,
     waitForACheckSuite,
     intervalSeconds,
     timeoutSeconds,
@@ -74,21 +74,21 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
 
   return new Promise(async resolve => {
     // Check to see if all of the check suites have already completed
-    let result = await checkTheCheckSuites({
+    let response = await checkTheCheckSuites({
       client,
       owner,
       repo,
       ref,
-      ignoreOwnCheckSuite,
+      checkSuiteID,
       waitForACheckSuite,
       appSlugFilter,
       onlyFirstCheckSuite
     })
-    if (result === CheckSuiteConclusion.success) {
+    if (response === CheckSuiteConclusion.success) {
       resolve(CheckSuiteConclusion.success)
       return
-    } else if (result !== CheckSuiteStatus.queued && result !== CheckSuiteStatus.in_progress) {
-      resolve(result)
+    } else if (response !== CheckSuiteStatus.queued && response !== CheckSuiteStatus.in_progress) {
+      resolve(response)
       return
     }
 
@@ -97,29 +97,29 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
 
     // Continue to check for completion every ${intervalSeconds}
     const intervalId = setInterval(async () => {
-      result = await checkTheCheckSuites({
+      response = await checkTheCheckSuites({
         client,
         owner,
         repo,
         ref,
-        ignoreOwnCheckSuite,
+        checkSuiteID,
         waitForACheckSuite,
         appSlugFilter,
         onlyFirstCheckSuite
       })
-      if (result === CheckSuiteConclusion.success) {
+      if (response === CheckSuiteConclusion.success) {
         if (timeoutId) {
           clearTimeout(timeoutId)
         }
         clearInterval(intervalId)
         resolve(CheckSuiteConclusion.success)
         return
-      } else if (result !== CheckSuiteStatus.queued && result !== CheckSuiteStatus.in_progress) {
+      } else if (response !== CheckSuiteStatus.queued && response !== CheckSuiteStatus.in_progress) {
         if (timeoutId) {
           clearTimeout(timeoutId)
         }
         clearInterval(intervalId)
-        resolve(result)
+        resolve(response)
         return
       }
     }, intervalSeconds * 1000)
@@ -137,16 +137,7 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
 async function checkTheCheckSuites(
   options: CheckTheCheckSuitesOptions
 ): Promise<Exclude<CheckSuiteStatus, CheckSuiteStatus.completed> | CheckSuiteConclusion> {
-  const {
-    client,
-    owner,
-    repo,
-    ref,
-    ignoreOwnCheckSuite,
-    waitForACheckSuite,
-    appSlugFilter,
-    onlyFirstCheckSuite
-  } = options
+  const {client, owner, repo, ref, checkSuiteID, waitForACheckSuite, appSlugFilter, onlyFirstCheckSuite} = options
 
   return new Promise(async resolve => {
     const checkSuitesAndMeta = await getCheckSuites({
@@ -208,12 +199,12 @@ async function checkTheCheckSuites(
       checkSuites = [firstCheckSuite]
     }
 
-    const highestPriorityCheckSuiteStatus = getHighestPriorityCheckSuiteStatus(checkSuites, ignoreOwnCheckSuite)
+    // Ignore this Check Run's Check Suite
+    checkSuites.filter(checkSuite => checkSuiteID !== checkSuite.id)
+
+    const highestPriorityCheckSuiteStatus = getHighestPriorityCheckSuiteStatus(checkSuites)
     if (highestPriorityCheckSuiteStatus === CheckSuiteStatus.completed) {
-      const highestPriorityCheckSuiteConclusion = getHighestPriorityCheckSuiteConclusion(
-        checkSuites,
-        ignoreOwnCheckSuite
-      )
+      const highestPriorityCheckSuiteConclusion = getHighestPriorityCheckSuiteConclusion(checkSuites)
       if (highestPriorityCheckSuiteConclusion === CheckSuiteConclusion.success) {
         resolve(CheckSuiteConclusion.success)
       } else {
@@ -231,25 +222,24 @@ async function getCheckSuites(options: GetCheckSuitesOptions): Promise<Octokit.C
   const {client, owner, repo, ref} = options
 
   return new Promise(async resolve => {
-    const result = await client.checks.listSuitesForRef({
+    const response = await client.checks.listSuitesForRef({
       owner,
       repo,
       ref
     })
-    if (result.status !== 200) {
+    if (response.status !== 200) {
       throw new Error(
         `Failed to list check suites for ${owner}/${repo}@${ref}. ` +
-          `Expected response code 200, got ${result.status}.`
+          `Expected response code 200, got ${response.status}.`
       )
     }
-    resolve(result.data)
+    resolve(response.data)
   })
 }
 
 function diagnose(checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[]): SimpleCheckSuiteMeta[] {
   return checkSuites.map<SimpleCheckSuiteMeta>(
     checkSuite =>
-      // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
       ({
         id: checkSuite.id,
         app: {
@@ -262,17 +252,11 @@ function diagnose(checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuites
 }
 
 function getHighestPriorityCheckSuiteStatus(
-  checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[],
-  ignoreOwnCheckSuite: boolean
+  checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[]
 ): CheckSuiteStatus {
-  let skipOneInProgress = ignoreOwnCheckSuite
   return checkSuites
     .map(checkSuite => CheckSuiteStatus[checkSuite.status as keyof typeof CheckSuiteStatus])
     .reduce((previous, current, currentIndex) => {
-      if (skipOneInProgress && current === CheckSuiteStatus.in_progress) {
-        skipOneInProgress = false
-        return previous
-      }
       for (const status of Object.keys(CheckSuiteStatus)) {
         if (current === undefined) {
           throw new Error(
@@ -293,17 +277,11 @@ function getHighestPriorityCheckSuiteStatus(
 }
 
 function getHighestPriorityCheckSuiteConclusion(
-  checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[],
-  ignoreOwnCheckSuite: boolean
+  checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuitesItem[]
 ): CheckSuiteConclusion {
-  let skipOneUndefined = ignoreOwnCheckSuite
   return checkSuites
     .map(checkSuite => CheckSuiteConclusion[checkSuite.conclusion as keyof typeof CheckSuiteConclusion])
     .reduce((previous, current, currentIndex) => {
-      if (skipOneUndefined && current === undefined) {
-        skipOneUndefined = false
-        return previous
-      }
       for (const conclusion of Object.keys(CheckSuiteConclusion)) {
         if (current === undefined) {
           throw new Error(

@@ -46,6 +46,7 @@ jobs:
         uses: ./
         with:
           appSlugFilter: github-actions
+          waitForACheckSuite: false
 
   commit_sha_test:
     name: Commit SHA test
@@ -72,6 +73,7 @@ jobs:
         with:
           appSlugFilter: github-actions
           onlyFirstCheckSuite: true
+          waitForACheckSuite: false
 
   race_condition_test:
     name: Race condition test

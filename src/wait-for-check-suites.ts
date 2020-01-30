@@ -149,6 +149,7 @@ async function checkTheCheckSuites(
 
     if (checkSuitesAndMeta.total_count === 0 || checkSuitesAndMeta.check_suites.length === 0) {
       if (waitForACheckSuite) {
+        core.debug(`No check suites exist for this commit. Waiting for one to show up.`)
         resolve(CheckSuiteStatus.queued)
         return
       } else {
@@ -157,18 +158,35 @@ async function checkTheCheckSuites(
         return
       }
     }
+
+    // Filter for Check Suites that match the app slug
     let checkSuites = appSlugFilter
       ? checkSuitesAndMeta.check_suites.filter(checkSuite => checkSuite.app.slug === appSlugFilter)
       : checkSuitesAndMeta.check_suites
+
+    // Ignore this Check Run's Check Suite
+    checkSuites = checkSuites.filter(checkSuite => checkSuiteID !== checkSuite.id)
+
+    // Check if there are no more Check Suites after the app slug and Check Suite ID filters
     if (checkSuites.length === 0) {
-      if (waitForACheckSuite) {
-        core.debug(
-          `No check suites with the app slug '${appSlugFilter}' exist for this commit. Waiting for one to show up.`
+      let message = ''
+      if (appSlugFilter && checkSuiteID !== null) {
+        message = `No check suites (excluding this one) with the app slug '${appSlugFilter}' exist for this commit.`
+      } else if (checkSuiteID !== null) {
+        message = `No check suites (excluding this one) exist for this commit.`
+      } else if (appSlugFilter) {
+        message = `No check suites with the app slug '${appSlugFilter}' exist for this commit.`
+      } else {
+        throw new Error(
+          "A Check Suite should exist, but it doesn't. Please submit an issue on this action's GitHub repo."
         )
+      }
+      if (waitForACheckSuite) {
+        core.debug(`${message} Waiting for one to show up.`)
         resolve(CheckSuiteStatus.queued)
         return
       } else {
-        core.info(`No check suites with the app slug '${appSlugFilter}' exist for this commit.`)
+        core.info(message)
         resolve(CheckSuiteConclusion.success)
         return
       }
@@ -198,9 +216,6 @@ async function checkTheCheckSuites(
       // Set the array of Check Suites to an array of one containing the first Check Suite created
       checkSuites = [firstCheckSuite]
     }
-
-    // Ignore this Check Run's Check Suite
-    checkSuites.filter(checkSuite => checkSuiteID !== checkSuite.id)
 
     const highestPriorityCheckSuiteStatus = getHighestPriorityCheckSuiteStatus(checkSuites)
     if (highestPriorityCheckSuiteStatus === CheckSuiteStatus.completed) {

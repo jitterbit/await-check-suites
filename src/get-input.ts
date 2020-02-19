@@ -56,7 +56,18 @@ export async function getInput(): Promise<Inputs> {
           `Expected response code 200, got ${response.status}.`
       )
     }
-    checkSuiteID = response.data.check_suite_id
+    // short-term workaround until @actions/github and @octokit/rest are updated to match actual responses
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const checkSuiteIDString: string | undefined = ((response.data as any).check_suite_url as string).split('/').pop()
+    if (!checkSuiteIDString) {
+      throw new Error(
+        `Expected the check_suite_url property to be returned in the getWorkflowRun API call, but it isn't (${
+          (response.data as any).check_suite_url
+        } as ${typeof (response.data as any).check_suite_url}). Please submit an issue on this action's GitHub repo.`
+      )
+    }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    checkSuiteID = parseInt(checkSuiteIDString)
   }
   /* eslint-enable @typescript-eslint/camelcase */
   if (checkSuiteID !== null && isNaN(checkSuiteID)) {

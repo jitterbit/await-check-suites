@@ -29,8 +29,8 @@
     "node": "^12.0.0"
   },
   "scripts": {
-    "build": "tsc",
     "clean": "rimraf dist/**/* lib/**/*",
+    "build": "tsc",
     "format": "prettier --write **/*.ts",
     "format:check": "prettier --check **/*.ts",
     "lint": "eslint src/**/*.ts",
@@ -39,24 +39,24 @@
     "all": "yarn clean && yarn build && yarn format && yarn lint && yarn package && yarn test"
   },
   "dependencies": {
-    "@actions/core": "^1.2.2",
-    "@actions/github": "^2.1.0"
+    "@actions/core": "^1.2.3",
+    "@actions/github": "^2.1.1"
   },
   "devDependencies": {
-    "@octokit/rest": "^16.40.2",
-    "@types/jest": "^25.1.1",
-    "@types/node": "^13.5.2",
-    "@typescript-eslint/parser": "^2.8.0",
-    "@zeit/ncc": "^0.21.0",
+    "@octokit/rest": "^16.43.1",
+    "@types/jest": "^25.1.3",
+    "@types/node": "^12.12.29",
+    "@typescript-eslint/parser": "^2.22.0",
+    "@zeit/ncc": "^0.21.1",
     "eslint": "^6.8.0",
-    "eslint-plugin-github": "^3.4.0",
-    "eslint-plugin-jest": "^23.6.0",
+    "eslint-plugin-github": "^3.4.1",
+    "eslint-plugin-jest": "^23.8.1",
     "jest": "^25.1.0",
     "jest-circus": "^25.1.0",
     "js-yaml": "^3.13.1",
     "prettier": "^1.19.1",
-    "rimraf": "^3.0.0",
-    "ts-jest": "^25.1.0",
-    "typescript": "^3.6.4"
+    "rimraf": "^3.0.2",
+    "ts-jest": "^25.2.1",
+    "typescript": "~3.8.3"
   }
 }

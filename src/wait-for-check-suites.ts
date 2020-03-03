@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {GitHub} from '@actions/github'
-import Octokit from '@octokit/rest' // imported for types only
+import {Octokit} from '@octokit/rest' // imported for types only
 
 // Define these enums to workaround https://github.com/octokit/plugin-rest-endpoint-methods.js/issues/9
 /* eslint-disable @typescript-eslint/camelcase */

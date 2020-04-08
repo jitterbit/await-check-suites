@@ -2,8 +2,8 @@ name: Await Check Suites
 description: Wait for a commit's check suites to complete
 author: Jitterbit, Inc.
 branding:
-  icon: 'watch'
-  color: 'purple'
+  icon: watch
+  color: purple
 runs:
   using: node12
   main: dist/index.js

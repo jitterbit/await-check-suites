@@ -1,0 +1,16 @@
+name: Race Condition Test
+
+on:
+  push:
+    branches:
+      - race_condition_test
+
+jobs:
+  noop:
+    name: No op
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Sleep 15 seconds
+      run: |
+        sleep 15s

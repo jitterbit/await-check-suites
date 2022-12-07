@@ -86,12 +86,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: race_condition_test
-          token: ${{ secrets.GITHUB_PAT }}
+          token: ${{ secrets.GH_TOKEN }}
           path: race_condition_test
 
       - name: Make a commit to the race_condition_test branch
         env:
-          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+          GITHUB_PAT: ${{ secrets.GH_TOKEN }}
         run: |
           mkdir new_race_condition_test
           cd new_race_condition_test

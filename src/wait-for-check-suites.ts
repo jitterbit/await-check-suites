@@ -6,6 +6,7 @@ import {Octokit} from '@octokit/rest' // imported for types only
 /* eslint-disable @typescript-eslint/camelcase */
 // All possible Check Suite statuses in descending order of priority
 enum CheckSuiteStatus {
+  pending = 'pending',
   queued = 'queued',
   in_progress = 'in_progress',
   completed = 'completed'
@@ -87,7 +88,11 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
     if (response === CheckSuiteConclusion.success) {
       resolve(CheckSuiteConclusion.success)
       return
-    } else if (response !== CheckSuiteStatus.queued && response !== CheckSuiteStatus.in_progress) {
+    } else if (
+      response !== CheckSuiteStatus.pending &&
+      response !== CheckSuiteStatus.queued &&
+      response !== CheckSuiteStatus.in_progress
+    ) {
       resolve(response)
       return
     }
@@ -114,7 +119,11 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
         clearInterval(intervalId)
         resolve(CheckSuiteConclusion.success)
         return
-      } else if (response !== CheckSuiteStatus.queued && response !== CheckSuiteStatus.in_progress) {
+      } else if (
+        response !== CheckSuiteStatus.pending &&
+        response !== CheckSuiteStatus.queued &&
+        response !== CheckSuiteStatus.in_progress
+      ) {
         if (timeoutId) {
           clearTimeout(timeoutId)
         }

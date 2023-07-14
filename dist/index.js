@@ -25474,6 +25474,7 @@ const core = __importStar(__webpack_require__(470));
 // All possible Check Suite statuses in descending order of priority
 var CheckSuiteStatus;
 (function (CheckSuiteStatus) {
+    CheckSuiteStatus["pending"] = "pending";
     CheckSuiteStatus["queued"] = "queued";
     CheckSuiteStatus["in_progress"] = "in_progress";
     CheckSuiteStatus["completed"] = "completed";
@@ -25507,7 +25508,9 @@ function waitForCheckSuites(options) {
                 resolve(CheckSuiteConclusion.success);
                 return;
             }
-            else if (response !== CheckSuiteStatus.queued && response !== CheckSuiteStatus.in_progress) {
+            else if (response !== CheckSuiteStatus.pending &&
+                response !== CheckSuiteStatus.queued &&
+                response !== CheckSuiteStatus.in_progress) {
                 resolve(response);
                 return;
             }
@@ -25533,7 +25536,9 @@ function waitForCheckSuites(options) {
                     resolve(CheckSuiteConclusion.success);
                     return;
                 }
-                else if (response !== CheckSuiteStatus.queued && response !== CheckSuiteStatus.in_progress) {
+                else if (response !== CheckSuiteStatus.pending &&
+                    response !== CheckSuiteStatus.queued &&
+                    response !== CheckSuiteStatus.in_progress) {
                     if (timeoutId) {
                         clearTimeout(timeoutId);
                     }

@@ -3,8 +3,8 @@ import {GitHub} from '@actions/github'
 import {Octokit} from '@octokit/rest' // imported for types only
 
 // Define these enums to workaround https://github.com/octokit/plugin-rest-endpoint-methods.js/issues/9
-/* eslint-disable @typescript-eslint/camelcase */
 // All possible Check Suite statuses in descending order of priority
+/* eslint-disable no-shadow */
 enum CheckSuiteStatus {
   pending = 'pending',
   queued = 'queued',
@@ -20,7 +20,6 @@ export enum CheckSuiteConclusion {
   neutral = 'neutral',
   success = 'success'
 }
-/* eslint-enable @typescript-eslint/camelcase */
 
 interface WaitForCheckSuitesOptions {
   client: GitHub
@@ -73,6 +72,7 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
     onlyFirstCheckSuite
   } = options
 
+  /* eslint-disable no-async-promise-executor */
   return new Promise(async resolve => {
     // Check to see if all of the check suites have already completed
     let response = await checkTheCheckSuites({
@@ -98,6 +98,7 @@ export async function waitForCheckSuites(options: WaitForCheckSuitesOptions): Pr
     }
 
     // Is set by setTimeout after the below setInterval
+    /* eslint-disable no-undef */
     let timeoutId: NodeJS.Timeout
 
     // Continue to check for completion every ${intervalSeconds}
@@ -207,8 +208,8 @@ async function checkTheCheckSuites(
       const firstCheckSuite = checkSuites.reduce((previous, current) => {
         // Cast to any to workaround https://github.com/octokit/plugin-rest-endpoint-methods.js/issues/8
         /* eslint-disable @typescript-eslint/no-explicit-any */
-        const previousDateString = (previous as any)['created_at'],
-          currentDateString = (current as any)['created_at']
+        const previousDateString = (previous as any)['created_at']
+        const currentDateString = (current as any)['created_at']
         /* eslint-enable @typescript-eslint/no-explicit-any */
         if (typeof previousDateString !== 'string' || typeof currentDateString !== 'string') {
           throw new Error(
@@ -271,7 +272,7 @@ function diagnose(checkSuites: Octokit.ChecksListSuitesForRefResponseCheckSuites
         },
         status: checkSuite.status as CheckSuiteStatus,
         conclusion: checkSuite.conclusion as CheckSuiteConclusion
-      } as SimpleCheckSuiteMeta)
+      }) as SimpleCheckSuiteMeta
   )
 }
 

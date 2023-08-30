@@ -45,7 +45,6 @@ export async function getInput(): Promise<Inputs> {
       } as ${typeof process.env.GITHUB_RUN_ID}). Please submit an issue on this action's GitHub repo.`
     )
   }
-  /* eslint-disable @typescript-eslint/camelcase */
   let checkSuiteID: number | null = null
   if (owner === context.repo.owner && repo === context.repo.repo) {
     const workflowRunID = parseInt(process.env.GITHUB_RUN_ID)
@@ -69,7 +68,6 @@ export async function getInput(): Promise<Inputs> {
     /* eslint-enable @typescript-eslint/no-explicit-any */
     checkSuiteID = parseInt(checkSuiteIDString)
   }
-  /* eslint-enable @typescript-eslint/camelcase */
   if (checkSuiteID !== null && isNaN(checkSuiteID)) {
     throw new Error(
       `Expected the environment variable $GITHUB_RUN_ID to be a number but it isn't (${checkSuiteID} as ${typeof checkSuiteID}). ` +
